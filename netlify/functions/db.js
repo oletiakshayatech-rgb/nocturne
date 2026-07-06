@@ -1,50 +1,70 @@
-// Netlify serverless function — proxies JSONBin requests server-side
-// so there are no CORS issues from the browser.
-const JB_KEY = '$2a$10$KgdP6rVlXt9G4XPh80OEXeFSA82rHuoKKKhXnZ9MH0xnsd.68/t4.';
-const JB_BIN = '6a4a685cf5f4af5e2962920a';
-const JB_URL = `https://api.jsonbin.io/v3/b/${JB_BIN}`;
+// Netlify serverless function — stores data using Netlify Blobs
+// Built into Netlify — no external service, no CORS issues, completely free.
 
-exports.handler = async (event) => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
+const { getStore } = require('@netlify/blobs');
 
-  // Handle preflight
+const HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Content-Type': 'application/json',
+};
+
+const EMPTY = { posts: [], eng: {}, users: [] };
+
+exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+    return { statusCode: 200, headers: HEADERS, body: '' };
   }
 
   try {
-    if (event.httpMethod === 'GET') {
-      // Read from JSONBin
-      const r = await fetch(`${JB_URL}/latest`, {
-        headers: { 'X-Master-Key': JB_KEY }
-      });
-      const j = await r.json();
-      const d = j.record || j;
-      return {
-        statusCode: 200, headers,
-        body: JSON.stringify({ posts: d.posts||[], eng: d.eng||{}, users: d.users||[] })
-      };
+    const store = getStore({ name: 'nocturne', consistency: 'strong' });
 
-    } else if (event.httpMethod === 'PUT') {
-      // Write to JSONBin
-      const data = JSON.parse(event.body || '{}');
-      const r = await fetch(JB_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': JB_KEY },
-        body: JSON.stringify(data)
-      });
-      const j = await r.json();
-      return { statusCode: 200, headers, body: JSON.stringify(j) };
+    if (event.httpMethod === 'GET') {
+      const raw = await store.get('db');
+      const data = raw ? JSON.parse(raw) : EMPTY;
+      return {
+        statusCode: 200,
+        headers: HEADERS,
+        body: JSON.stringify(data),
+      };
     }
 
-    return { statusCode: 405, headers, body: 'Method not allowed' };
+    if (event.httpMethod === 'PUT') {
+      const incoming = JSON.parse(event.body || '{}');
+
+      // Safety: never overwrite with empty data
+      if (!incoming.posts || !Array.isArray(incoming.posts)) {
+        return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Invalid data' }) };
+      }
+
+      // Read current data and merge — never lose existing posts
+      const raw = await store.get('db');
+      const current = raw ? JSON.parse(raw) : EMPTY;
+
+      // Keep posts from cloud that aren't in incoming (safety net)
+      const incomingIds = new Set(incoming.posts.map(p => String(p.id)));
+      const preserved = current.posts.filter(p => !incomingIds.has(String(p.id)));
+      const merged = {
+        posts: [...incoming.posts, ...preserved],
+        eng:   { ...current.eng,   ...incoming.eng   },
+        users: incoming.users?.length ? incoming.users : current.users,
+      };
+
+      await store.set('db', JSON.stringify(merged));
+      console.log(`Saved ${merged.posts.length} posts`);
+
+      return {
+        statusCode: 200,
+        headers: HEADERS,
+        body: JSON.stringify({ ok: true, posts: merged.posts.length }),
+      };
+    }
+
+    return { statusCode: 405, headers: HEADERS, body: 'Method not allowed' };
 
   } catch (e) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
+    console.error('db function error:', e);
+    return { statusCode: 500, headers: HEADERS, body: JSON.stringify({ error: e.message }) };
   }
 };
