@@ -4,3 +4,9 @@
 
 [functions]
   node_bundler = "esbuild"
+  # @netlify/blobs uses dynamic/conditional requires that esbuild's bundler
+  # can silently mis-handle, which can make the function fail to deploy
+  # (showing up as a 404 on /.netlify/functions/db, with no error in the
+  # main build log). Marking it external tells esbuild to leave it alone
+  # and resolve it from node_modules at runtime instead of bundling it.
+  external_node_modules = ["@netlify/blobs"]

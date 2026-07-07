@@ -431,6 +431,75 @@ nav {
 .blog-hdr { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; }
 .blog-hdr h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); }
 
+/* Toolbar: search, sort tabs, category/archive filters, tag cloud */
+.blog-toolbar { margin-bottom: 2rem; display:flex; flex-direction:column; gap:.9rem; }
+.bt-search input {
+  width:100%; background:var(--bg-input); border:1px solid var(--bd); border-radius:var(--r1);
+  color:var(--tp); font-family:var(--f-body); font-size:.95rem; padding:.65rem 1rem;
+}
+.bt-search input:focus { outline:none; border-color:var(--a); }
+.bt-sorts { display:flex; flex-wrap:wrap; gap:.4rem; }
+.bt-tab {
+  background:none; border:1px solid var(--bd); color:var(--ts); cursor:pointer;
+  font-family:var(--f-nav); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase;
+  padding:.5rem .9rem; border-radius:999px; transition:all var(--t) var(--ease);
+}
+.bt-tab:hover { border-color:var(--a); color:var(--tp); }
+.bt-tab.active { background:var(--as); border-color:var(--a); color:var(--a); }
+.bt-row2 { display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; }
+.bt-row2 select {
+  background:var(--bg-input); border:1px solid var(--bd); color:var(--ts);
+  font-family:var(--f-nav); font-size:.62rem; letter-spacing:.08em; padding:.5rem .7rem; border-radius:var(--r1);
+}
+.bt-tags { display:flex; flex-wrap:wrap; gap:.4rem; }
+.tag-pill {
+  background:none; border:1px solid var(--bf); color:var(--tm); cursor:pointer;
+  font-family:var(--f-nav); font-size:.6rem; letter-spacing:.08em; padding:.35rem .7rem; border-radius:999px;
+  transition:all var(--t) var(--ease);
+}
+.tag-pill:hover { border-color:var(--a); color:var(--a); }
+.tag-pill.active { background:var(--as); border-color:var(--a); color:var(--a); }
+
+/* Featured story hero */
+.featured-hero {
+  position:relative; border:1px solid var(--bd); border-radius:var(--r3); overflow:hidden;
+  margin-bottom:2.5rem; cursor:pointer; min-height:260px; display:flex; align-items:flex-end;
+  background:var(--bg-card);
+}
+.featured-hero img {
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.5;
+  transition:opacity var(--t) var(--ease);
+}
+.featured-hero:hover img { opacity:.65; }
+.featured-hero-body { position:relative; z-index:1; padding:2rem; }
+.featured-hero-kicker {
+  font-family:var(--f-nav); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--a); margin-bottom:.6rem;
+}
+.featured-hero-title { font-size:clamp(1.4rem,3vw,2.1rem); color:var(--tp); margin-bottom:.5rem; }
+.featured-hero-sub { color:var(--ts); font-size:.95rem; max-width:60ch; }
+
+/* Reading-time / share badges on cards */
+.pub-rt { color:var(--tm); }
+.pub-share-btn {
+  background:none; border:1px solid var(--bf); color:var(--tm); cursor:pointer; border-radius:999px;
+  padding:.25rem .55rem; font-size:.72rem; transition:all var(--t) var(--ease);
+}
+.pub-share-btn:hover { border-color:var(--a); color:var(--a); }
+.pub-badge {
+  font-family:var(--f-nav); font-size:.56rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--a); border:1px solid var(--ab); border-radius:999px; padding:.2rem .55rem;
+}
+
+.empty-state {
+  text-align:center; padding:3.5rem 2rem; color:var(--tm); border:1px dashed var(--bf); border-radius:var(--r2);
+}
+.empty-state-icon { opacity:.5; margin-bottom:1rem; }
+.empty-state-icon svg { width:40px; height:40px; stroke:var(--a); }
+.empty-state-title {
+  font-family:var(--f-nav); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ts); margin-bottom:.4rem;
+}
+.empty-state-sub { font-family:var(--f-body); font-size:.9rem; color:var(--tm); }
+
 /* ╔══════════════════════════════════════════════╗
    ║  EDITOR                                      ║
    ╚══════════════════════════════════════════════╝ */
@@ -778,6 +847,7 @@ nav {
   line-height: 1.55; margin-bottom: .6rem;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
+.pub-badges { display:flex; gap:.4rem; margin-bottom:.5rem; flex-wrap:wrap; }
 
 /* Bottom meta row */
 .pub-card-meta {
@@ -1521,6 +1591,29 @@ footer {
     Reading as a guest. <button onclick="openAuth('signup')" style="background:none;border:none;color:var(--a);font-family:var(--f-nav);font-size:.67rem;letter-spacing:.1em;cursor:pointer;padding:0;text-decoration:underline">Apply to write →</button>
   </p>
 
+  <div id="featuredHero"></div>
+
+  <div class="blog-toolbar" id="blogToolbar">
+    <div class="bt-search">
+      <input id="blogSearch" type="text" placeholder="Search posts by title, author, category…" oninput="applyBlogFilters()">
+    </div>
+    <div class="bt-sorts" id="blogSortTabs">
+      <button class="bt-tab active" data-sort="latest"   onclick="setBlogSort('latest')">Latest</button>
+      <button class="bt-tab" data-sort="trending"        onclick="setBlogSort('trending')">Trending</button>
+      <button class="bt-tab" data-sort="viewed"          onclick="setBlogSort('viewed')">Most Viewed</button>
+      <button class="bt-tab" data-sort="liked"           onclick="setBlogSort('liked')">Most Liked</button>
+      <button class="bt-tab" data-sort="updated"         onclick="setBlogSort('updated')">Recently Updated</button>
+      <button class="bt-tab" data-sort="featured"        onclick="setBlogSort('featured')">Featured</button>
+      <button class="bt-tab" data-sort="pick"            onclick="setBlogSort('pick')">Editor's Pick</button>
+    </div>
+    <div class="bt-row2">
+      <select id="blogCategory" onchange="applyBlogFilters()"><option value="">All categories</option></select>
+      <select id="blogArchive"  onchange="applyBlogFilters()"><option value="">All time</option></select>
+      <button class="btn btn-ghost btn-sm" onclick="surpriseMe()">🎲 Surprise me</button>
+    </div>
+    <div class="bt-tags" id="blogTagCloud"></div>
+  </div>
+
   <!-- EDITOR -->
   <div id="editor-wrap">
     <div class="ed-topbar">
@@ -1636,6 +1729,8 @@ footer {
         <span class="read-hero-author" id="readAuthor"></span>
         <span class="read-hero-dot"></span>
         <span class="read-hero-date" id="readDate"></span>
+        <span class="read-hero-dot"></span>
+        <span class="read-hero-stat" id="readRT"></span>
         <span class="read-hero-dot"></span>
         <span class="read-hero-stat">♥ <span id="readLikes"></span></span>
         <span class="read-hero-stat">👁 <span id="readViews"></span></span>
@@ -2090,6 +2185,26 @@ async function readDB() {
 let _writeTimer = null;
 let _dirty = false;
 let _initDone = false; // prevents debounced writes from racing with Firestore read on page load
+let _cloudSynced = false; // true only after a CONFIRMED successful cloud read this session
+const BACKUP_KEY = 'nct_backup';
+
+/* Snapshot the last-known-good database before every cloud write, so a bad
+   write (or a bug) can always be recovered from. This is separate from the
+   live nct_posts/nct_eng/nct_users keys, which get overwritten on every save. */
+function saveBackupSnapshot(db) {
+  try {
+    localStorage.setItem(BACKUP_KEY, JSON.stringify({
+      posts: db.posts || [], eng: db.eng || {}, users: db.users || [],
+      _backupAt: Date.now()
+    }));
+  } catch(e) {}
+}
+function readBackupSnapshot() {
+  try {
+    const raw = localStorage.getItem(BACKUP_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
 
 /* Immediate write — used after publish/delete so data is never lost on reload */
 async function writeNow() {
@@ -2097,9 +2212,37 @@ async function writeNow() {
   clearTimeout(_writeTimer); // cancel any pending debounced write
   _dirty = false;
   _initDone = true; // ensure flag is set if writeNow called manually
+
+  // ── SAFETY GUARD ──────────────────────────────────────────────────────
+  // Never let an empty/not-yet-confirmed local cache overwrite real cloud
+  // data. This is the #1 cause of "posts disappearing": if the initial
+  // cloud read failed (cold start, network blip, config error) on a device
+  // with no local copy, _cache.posts is [] — and without this guard, the
+  // very next like/comment/user-edit would push that empty array to the
+  // cloud and wipe the site for everyone.
+  if ((_cache.posts || []).length === 0 && !_cloudSynced) {
+    console.error('Nocturne: refusing to write — posts are empty and cloud sync was never confirmed this session. Retrying sync instead of saving.');
+    showSaveIndicator('⚠ Reconnecting…');
+    try {
+      const db = await fsGetAll();
+      _cache = { posts: mergeThumbnails(db.posts || []), eng: db.eng || {}, users: db.users || [] };
+      saveToLocal(_cache);
+      _cloudSynced = true;
+      renderPosts(); renderHomeGrid(); updateNav();
+      showSaveIndicator('Reconnected — try again');
+    } catch(e) {
+      showSaveIndicator('⚠ Offline — not saved to cloud yet');
+    }
+    setTimeout(()=>showSaveIndicator(''), 4000);
+    return;
+  }
+
   try {
     showSaveIndicator('Saving…');
+    // Keep a recoverable copy of the last-known-good state before overwriting it.
+    saveBackupSnapshot(_cache);
     await fsSetAll({ posts: _cache.posts, eng: _cache.eng, users: _cache.users });
+    _cloudSynced = true; // this write is now the confirmed cloud state
     showSaveIndicator('Saved ✓');
     setTimeout(()=>showSaveIndicator(''), 2000);
   } catch(e) {
@@ -2197,24 +2340,40 @@ async function initDB() {
     const b = document.getElementById('dbSetupBanner');
     if (b) b.style.display = 'block';
   } else {
-    try {
-      const db = await fsGetAll();
-      if (db) {
-        const mergedPosts = mergeThumbnails(db.posts || []);
-        _cache = { posts: mergedPosts, eng: db.eng||{}, users: db.users||[] };
-        saveToLocal(_cache);
-        clearTimeout(_writeTimer);
-        _dirty = false;
-        renderPosts();
-        renderHomeGrid();
-        updateNav();
+    // Retry a couple of times before giving up — Netlify functions can have
+    // a slow cold start, and a transient failure here must never be treated
+    // as "there is no data" (see the empty-write guard in writeNow()).
+    const attempts = [0, 1200, 3000];
+    for (let i = 0; i < attempts.length; i++) {
+      if (attempts[i]) await new Promise(r => setTimeout(r, attempts[i]));
+      try {
+        const db = await fsGetAll();
+        if (db) {
+          const mergedPosts = mergeThumbnails(db.posts || []);
+          _cache = { posts: mergedPosts, eng: db.eng||{}, users: db.users||[] };
+          saveToLocal(_cache);
+          clearTimeout(_writeTimer);
+          _dirty = false;
+          _cloudSynced = true;
+          renderPosts();
+          renderHomeGrid();
+          updateNav();
+        }
+        break; // success — stop retrying
+      } catch(e) {
+        console.warn(`Cloud sync attempt ${i+1} failed, ${i < attempts.length-1 ? 'retrying…' : 'using localStorage:'}`, e.message);
       }
-    } catch(e) {
-      console.warn('Cloud sync failed, using localStorage:', e.message);
+    }
+    if (!_cloudSynced) {
+      // Still couldn't confirm cloud state. Keep showing whatever is in
+      // localStorage, but writeNow() will refuse to push this to the cloud
+      // until a sync succeeds, so nothing gets wiped out.
+      showSaveIndicator('⚠ Offline — showing last saved copy');
+      setTimeout(()=>showSaveIndicator(''), 4000);
     }
   }
 
-  // Only allow debounced writes AFTER the cloud read is done
+  // Only allow debounced writes AFTER the cloud read attempt is done
   _initDone = true;
 }
 function updateNav() {
@@ -3413,9 +3572,12 @@ function detectImgAlign(img){
 /* ══════════════════════════════════════
    PUBLISH / EDIT / DELETE
 ══════════════════════════════════════ */
+let _publishing = false; // guards against double-submit (double-click / double-tap) creating duplicate posts
 async function publishPost() {
   const canWrite = curUser && (curUser.role==='admin'||curUser.role==='approved');
   if (!canWrite) return;
+  if (_publishing) return; // a publish is already in flight — ignore the repeat click
+  _publishing = true;
 
   const title    = document.getElementById('edTitle').value.trim();
   const tag      = document.getElementById('edTag').value.trim()      || 'Essay';
@@ -3429,8 +3591,8 @@ async function publishPost() {
   clone.querySelectorAll('.img-wrap').forEach(w=>w.classList.remove('selected','dragging'));
   const body = clone.innerHTML.trim();
 
-  if (!title) { toast('Add a title first'); return; }
-  if (!body)  { toast('Write something first'); return; }
+  if (!title) { toast('Add a title first'); _publishing = false; return; }
+  if (!body)  { toast('Write something first'); _publishing = false; return; }
 
   // Compress thumbnail properly (async, waits for image to load)
   const thumbnail = _thumbData ? await compressForCloud(_thumbData, 800, 0.72) : null;
@@ -3442,13 +3604,13 @@ async function publishPost() {
     const i = posts.findIndex(p=>p.id===editingId);
     if (i > -1) {
       posts[i] = {
-        ...posts[i], title, tag, author, subtitle, body, updated: d,
+        ...posts[i], title, tag, author, subtitle, body, updated: d, updatedTs: Date.now(),
         thumbnail: thumbnail !== null ? thumbnail : posts[i].thumbnail
       };
     }
   } else {
     const id = Date.now();
-    posts.unshift({id, title, tag, author, subtitle, body, thumbnail, date: d});
+    posts.unshift({id, title, tag, author, subtitle, body, thumbnail, date: d, ts: Date.now(), featured:false, pick:false});
     // Init engagement inline — don't call patchEng which triggers _scheduleWrite
     const e = loadEng();
     const key = String(id);
@@ -3476,7 +3638,11 @@ async function publishPost() {
   renderHomeGrid();
 
   // NOW write to Firestore — single, clean, awaited write
-  await writeNow();
+  try {
+    await writeNow();
+  } finally {
+    _publishing = false;
+  }
 }
 
 /* Compress a base64 image to target maxW and quality via canvas */
@@ -3499,9 +3665,15 @@ function compressThumb(dataUrl, maxW, quality){
 let delTargetId=null;
 function promptDel(id){ delTargetId=id; document.getElementById('delModal').classList.add('open'); }
 function closeDel()   { document.getElementById('delModal').classList.remove('open'); delTargetId=null; }
-function confirmDel(){
+async function confirmDel(){
   const posts=loadPosts().filter(p=>p.id!==delTargetId);
   savePosts(posts); renderPosts(); renderHomeGrid(); closeDel(); toast('Post removed');
+  // savePosts() only updates the local cache/localStorage — without an
+  // explicit write here, the deletion never reaches the cloud, so the
+  // "deleted" post would reappear on other devices or after the next
+  // cloud sync. Deletion must be permanent everywhere, not just locally.
+  clearTimeout(_writeTimer);
+  await writeNow();
 }
 /* delModal click-outside handled in DOMContentLoaded above */
 
@@ -3532,18 +3704,190 @@ function editPost(id){
 ══════════════════════════════════════ */
 const viewed = new Set();
 
-function renderPosts(){
-  const posts=loadPosts();
-  const list=document.getElementById('postsList');
-  const empty=document.getElementById('emptyState');
-  if(posts.length===0){list.innerHTML='';list.appendChild(empty);empty.style.display='';return;}
-  empty.style.display='none';
-  // canWrite controls edit/delete buttons only — posts are visible to ALL visitors
-  const canWrite=curUser&&(curUser.role==='admin'||curUser.role==='approved');
-  list.innerHTML=posts.map(p=>buildPostHTML(p,canWrite)).join('');
+// ── Blog toolbar state ──────────────────────────────────────────────────
+let _blogSort     = 'latest';
+let _blogSearch   = '';
+let _blogCategory = '';
+let _blogArchive  = '';
+
+function postTs(p)        { return p.ts || Date.parse(p.date) || 0; }
+function postUpdatedTs(p) { return p.updatedTs || (p.updated ? Date.parse(p.updated) : 0) || postTs(p); }
+
+function readingTime(html){
+  const text  = String(html||'').replace(/<[^>]*>/g,' ');
+  const words = (text.trim().match(/\S+/g)||[]).length;
+  return Math.max(1, Math.round(words/200));
 }
 
-function buildPostHTML(p, canWrite){
+function monthKey(ts){
+  if (!ts) return 'Undated';
+  return new Date(ts).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+}
+
+function emptyStateHTML(kind){
+  if (kind === 'filtered') {
+    return `<div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+            <div class="empty-state-title">No posts match</div>
+            <div class="empty-state-sub">Try a different search, category, or time range.</div>`;
+  }
+  return `<div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div class="empty-state-title">No posts yet</div>
+          <div class="empty-state-sub">Check back soon — the first story is on its way.</div>`;
+}
+
+function populateBlogControls(posts){
+  const catSel = document.getElementById('blogCategory');
+  if (catSel) {
+    const cur  = catSel.value;
+    const cats = [...new Set(posts.map(p=>p.tag||'Essay'))].sort((a,b)=>a.localeCompare(b));
+    catSel.innerHTML = '<option value="">All categories</option>' +
+      cats.map(c=>`<option value="${esc(c)}" ${c===cur?'selected':''}>${esc(c)}</option>`).join('');
+  }
+  const arSel = document.getElementById('blogArchive');
+  if (arSel) {
+    const cur    = arSel.value;
+    const months = [...new Set(posts.map(p=>monthKey(postTs(p))))]
+      .filter(m=>m!=='Undated')
+      .sort((a,b)=> new Date('1 '+b) - new Date('1 '+a));
+    arSel.innerHTML = '<option value="">All time</option>' +
+      months.map(m=>`<option value="${esc(m)}" ${m===cur?'selected':''}>${esc(m)}</option>`).join('');
+  }
+  const cloud = document.getElementById('blogTagCloud');
+  if (cloud) {
+    const freq = {};
+    posts.forEach(p=>{ const t=p.tag||'Essay'; freq[t]=(freq[t]||0)+1; });
+    const top = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    cloud.innerHTML = top.map(([t])=>
+      `<button class="tag-pill ${_blogCategory===t?'active':''}" onclick="setTagFilter('${t.replace(/'/g,"\\'")}')">${esc(t)}</button>`
+    ).join('');
+  }
+}
+
+function setBlogSort(s){
+  _blogSort = s;
+  document.querySelectorAll('.bt-tab').forEach(b=>b.classList.toggle('active', b.dataset.sort===s));
+  renderPosts();
+}
+function applyBlogFilters(){
+  _blogSearch   = (document.getElementById('blogSearch')?.value || '').trim().toLowerCase();
+  _blogCategory = document.getElementById('blogCategory')?.value || '';
+  _blogArchive  = document.getElementById('blogArchive')?.value || '';
+  renderPosts();
+}
+function setTagFilter(tag){
+  _blogCategory = (_blogCategory === tag) ? '' : tag;
+  const sel = document.getElementById('blogCategory');
+  if (sel) sel.value = _blogCategory;
+  renderPosts();
+}
+function surpriseMe(){
+  const posts = loadPosts();
+  if (!posts.length) { toast('No posts yet'); return; }
+  const p = posts[Math.floor(Math.random()*posts.length)];
+  openPost(p.id, 'blog');
+}
+
+async function toggleFeatured(id){
+  if (!(curUser && curUser.role==='admin')) return;
+  const posts = loadPosts();
+  const p = posts.find(x=>String(x.id)===String(id));
+  if (!p) return;
+  p.featured = !p.featured;
+  savePosts(posts);
+  renderPosts(); renderHomeGrid();
+  clearTimeout(_writeTimer);
+  await writeNow();
+}
+async function toggleEditorsPick(id){
+  if (!(curUser && curUser.role==='admin')) return;
+  const posts = loadPosts();
+  const p = posts.find(x=>String(x.id)===String(id));
+  if (!p) return;
+  p.pick = !p.pick;
+  savePosts(posts);
+  renderPosts(); renderHomeGrid();
+  clearTimeout(_writeTimer);
+  await writeNow();
+}
+
+function renderFeaturedHero(posts){
+  const slot = document.getElementById('featuredHero');
+  if (!slot) return null;
+
+  // Only show the dedicated hero on the default, unfiltered "Latest" view —
+  // otherwise it'd duplicate whatever the person just filtered/sorted for.
+  const isDefaultView = _blogSort==='latest' && !_blogSearch && !_blogCategory && !_blogArchive;
+  if (!isDefaultView) { slot.innerHTML=''; return null; }
+
+  const featured = posts.find(p=>p.featured) || null;
+  if (!featured) { slot.innerHTML=''; return null; }
+
+  const eng = getEng(featured.id)[String(featured.id)];
+  const thumb = featured.thumbnail ? `<img src="${featured.thumbnail}" alt="${esc(featured.title)}">` : '';
+  slot.innerHTML = `
+    <div class="featured-hero" onclick="openPost(${featured.id},'blog')">
+      ${thumb}
+      <div class="featured-hero-body">
+        <div class="featured-hero-kicker">★ Featured story · ${readingTime(featured.body)} min read · ${eng.views} views</div>
+        <div class="featured-hero-title">${esc(featured.title)}</div>
+        ${featured.subtitle ? `<div class="featured-hero-sub">${esc(featured.subtitle)}</div>` : ''}
+      </div>
+    </div>`;
+  return featured.id; // caller can exclude this from the list below
+}
+
+function renderPosts(){
+  const allPosts = loadPosts();
+  const list  = document.getElementById('postsList');
+  const empty = document.getElementById('emptyState');
+  const canWrite = curUser && (curUser.role==='admin'||curUser.role==='approved');
+  const isAdmin  = curUser && curUser.role==='admin';
+
+  populateBlogControls(allPosts);
+
+  if (allPosts.length===0) {
+    document.getElementById('featuredHero').innerHTML = '';
+    list.innerHTML=''; empty.innerHTML = emptyStateHTML('none');
+    list.appendChild(empty); empty.style.display='';
+    return;
+  }
+
+  const heroId = renderFeaturedHero(allPosts);
+
+  // ── filter ──
+  let posts = allPosts.filter(p=>{
+    if (heroId!=null && p.id===heroId) return false;
+    if (_blogCategory && (p.tag||'Essay') !== _blogCategory) return false;
+    if (_blogArchive && monthKey(postTs(p)) !== _blogArchive) return false;
+    if (_blogSearch) {
+      const hay = `${p.title} ${p.subtitle||''} ${p.author||''} ${p.tag||''}`.toLowerCase();
+      if (!hay.includes(_blogSearch)) return false;
+    }
+    if (_blogSort==='featured' && !p.featured) return false;
+    if (_blogSort==='pick' && !p.pick) return false;
+    if (_blogSort==='updated' && !p.updated) return false;
+    return true;
+  });
+
+  // ── sort ──
+  const engMapAll = getEng(allPosts[0].id);
+  const engOf = p => engMapAll[String(p.id)] || {likes:0,views:0};
+  if (_blogSort==='viewed')        posts.sort((a,b)=> engOf(b).views - engOf(a).views);
+  else if (_blogSort==='liked')    posts.sort((a,b)=> engOf(b).likes - engOf(a).likes);
+  else if (_blogSort==='trending') posts.sort((a,b)=> (engOf(b).likes*2+engOf(b).views) - (engOf(a).likes*2+engOf(a).views));
+  else if (_blogSort==='updated')  posts.sort((a,b)=> postUpdatedTs(b) - postUpdatedTs(a));
+  else                             posts.sort((a,b)=> postTs(b) - postTs(a)); // latest / featured / pick
+
+  if (posts.length===0) {
+    list.innerHTML=''; empty.innerHTML = emptyStateHTML('filtered');
+    list.appendChild(empty); empty.style.display='';
+    return;
+  }
+  empty.style.display='none';
+  list.innerHTML = posts.map(p=>buildPostHTML(p,canWrite,isAdmin)).join('');
+}
+
+function buildPostHTML(p, canWrite, isAdmin){
   const key    = String(p.id);
   const eng    = getEng(key)[key];
   const vid    = getVID();
@@ -3551,6 +3895,7 @@ function buildPostHTML(p, canWrite){
   const av     = (p.author||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   const date   = p.updated ? 'Updated '+p.updated : p.date||'';
   const sub    = p.subtitle ? `<div class="pub-subtitle">${esc(p.subtitle)}</div>` : '';
+  const rt     = readingTime(p.body);
 
   const thumbHTML = p.thumbnail
     ? `<img src="${p.thumbnail}" alt="${esc(p.title)}">`
@@ -3559,10 +3904,14 @@ function buildPostHTML(p, canWrite){
         <span class="pub-thumb-empty-lbl">No cover</span>
        </div>`;
 
-  const ctrl = canWrite
+  const badges = `${p.featured?'<span class="pub-badge">★ Featured</span>':''}${p.pick?'<span class="pub-badge">✎ Editor\'s Pick</span>':''}`;
+
+  const ctrl = (canWrite || isAdmin)
     ? `<div class="pub-ctrl" onclick="event.stopPropagation()">
-        <button class="ic-btn" onclick="editPost(${p.id})">Edit</button>
-        <button class="ic-btn del" onclick="promptDel(${p.id})">Remove</button>
+        ${isAdmin?`<button class="ic-btn" title="Toggle Featured" onclick="toggleFeatured(${p.id})">${p.featured?'★':'☆'}</button>`:''}
+        ${isAdmin?`<button class="ic-btn" title="Toggle Editor's Pick" onclick="toggleEditorsPick(${p.id})">${p.pick?'✎':'✐'}</button>`:''}
+        ${canWrite?`<button class="ic-btn" onclick="editPost(${p.id})">Edit</button>`:''}
+        ${canWrite?`<button class="ic-btn del" onclick="promptDel(${p.id})">Remove</button>`:''}
        </div>`
     : '';
 
@@ -3575,6 +3924,7 @@ function buildPostHTML(p, canWrite){
         <div class="pub-tag">${esc(p.tag||'Essay')}</div>
         <div class="pub-title">${esc(p.title)}</div>
         ${sub}
+        ${badges ? `<div class="pub-badges">${badges}</div>` : ''}
       </div>
       <div class="pub-card-meta">
         <span class="pub-author">
@@ -3584,8 +3934,11 @@ function buildPostHTML(p, canWrite){
         <span class="pub-meta-dot"></span>
         <span class="pub-date">${date}</span>
         <span class="pub-meta-dot"></span>
+        <span class="pub-stat pub-rt" title="Reading time">${rt} min read</span>
+        <span class="pub-meta-dot"></span>
         <span class="pub-stat" title="Likes">♥ <span id="lcnt-h-${p.id}">${eng.likes}</span></span>
         <span class="pub-stat" title="Views">👁 <span id="vcnt-h-${p.id}">${eng.views}</span></span>
+        <button class="pub-share-btn" title="Share" onclick="event.stopPropagation();openShareModal(${p.id})">⤴</button>
         <span class="pub-meta-gap"></span>
         ${ctrl}
       </div>
@@ -3595,6 +3948,7 @@ function buildPostHTML(p, canWrite){
   </div>
 </div>`;
 }
+
 
 /* ══════════════════════════════════════
    OPEN POST — full-page read view
@@ -3635,6 +3989,7 @@ function openPost(id, fromPage){
   document.getElementById('readAv').textContent     = av;
   document.getElementById('readAuthor').textContent = p.author || 'Anonymous';
   document.getElementById('readDate').textContent   = p.updated ? 'Updated '+p.updated : p.date||'';
+  document.getElementById('readRT').textContent      = readingTime(p.body) + ' min read';
   document.getElementById('readLikes').textContent  = eng.likes;
   document.getElementById('readViews').textContent  = eng.views;
 
