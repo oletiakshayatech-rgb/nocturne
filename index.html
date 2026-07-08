@@ -1874,18 +1874,7 @@ footer {
   to{ transform:translate(var(--dx),var(--dy)) scale(.4); opacity:0; }
 }
 
-/* Cursor effects */
-#cursorFollow{
-  position:fixed; top:0; left:0; z-index:9500; pointer-events:none;
-  width:86px; height:86px; border-radius:50%;
-  background:var(--a); color:var(--bg);
-  display:flex; align-items:center; justify-content:center;
-  font-family:var(--f-nav); font-size:.62rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-  opacity:0; transform:translate(-50%,-50%) scale(.6);
-  transition:opacity .25s var(--ease), transform .25s var(--ease);
-}
-#cursorFollow.show{ opacity:1; transform:translate(-50%,-50%) scale(1); }
-@media (hover:none), (max-width:900px){ #cursorFollow{ display:none!important; } }
+/* Cursor effects (follower bubble removed) */
 
 /* Lightbox */
 .lightbox-bg{
@@ -2140,7 +2129,7 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
 </div>
 
 <!-- 🎨 Custom cursor follower (desktop) -->
-<div id="cursorFollow"></div>
+
 
 <!-- 🖼 Lightbox -->
 <div class="lightbox-bg" id="lightboxBg" onclick="closeLightbox(event)">
@@ -2249,7 +2238,6 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
       <button class="bt-tab" data-sort="trending"        onclick="setBlogSort('trending')">Trending</button>
       <button class="bt-tab" data-sort="viewed"          onclick="setBlogSort('viewed')">Most Viewed</button>
       <button class="bt-tab" data-sort="liked"           onclick="setBlogSort('liked')">Most Liked</button>
-      <button class="bt-tab" data-sort="featured"        onclick="setBlogSort('featured')">Featured</button>
       <button class="bt-tab" data-sort="pick"            onclick="setBlogSort('pick')">Editor's Pick</button>
     </div>
     <div class="bt-row2">
@@ -4612,7 +4600,6 @@ function renderPosts(){
       const hay = `${p.title} ${p.subtitle||''} ${p.author||''} ${p.tag||''}`.toLowerCase();
       if (!hay.includes(_blogSearch)) return false;
     }
-    if (_blogSort==='featured' && !p.featured) return false;
     if (_blogSort==='pick' && !p.pick) return false;
     return true;
   });
@@ -4623,7 +4610,7 @@ function renderPosts(){
   if (_blogSort==='viewed')        posts.sort((a,b)=> engOf(b).views - engOf(a).views);
   else if (_blogSort==='liked')    posts.sort((a,b)=> engOf(b).likes - engOf(a).likes);
   else if (_blogSort==='trending') posts.sort((a,b)=> (engOf(b).likes*2+engOf(b).views) - (engOf(a).likes*2+engOf(a).views));
-  else                             posts.sort((a,b)=> postTs(b) - postTs(a)); // latest / featured / pick
+  else                             posts.sort((a,b)=> postTs(b) - postTs(a)); // latest / pick
 
   if (posts.length===0) {
     list.innerHTML=''; empty.innerHTML = emptyStateHTML('filtered');
@@ -5367,7 +5354,7 @@ function runIntroReveal(){
     const el = document.getElementById('introReveal');
     if(el) el.classList.add('hide');
     setTimeout(()=>{ el && el.remove(); }, 950);
-  }, 2050);
+  }, 3000);
 }
 
 /* ══════════════════════════════════════
@@ -5506,25 +5493,6 @@ function burstHearts(anchorEl){
 ══════════════════════════════════════ */
 function wireCursorFX(){
   if(window.matchMedia('(hover:none)').matches) return;
-  const cur = document.getElementById('cursorFollow');
-  let raf = null, tx=0, ty=0, cx=0, cy=0;
-  document.addEventListener('mousemove', (e)=>{
-    tx = e.clientX; ty = e.clientY;
-    if(!raf){
-      raf = requestAnimationFrame(function step(){
-        cx += (tx-cx)*0.25; cy += (ty-cy)*0.25;
-        cur.style.left = cx+'px'; cur.style.top = cy+'px';
-        raf = null;
-      });
-    }
-    const hoverTarget = e.target.closest('[data-cursor-label]');
-    if(hoverTarget){
-      cur.textContent = hoverTarget.dataset.cursorLabel || 'Read →';
-      cur.classList.add('show');
-    } else {
-      cur.classList.remove('show');
-    }
-  });
 
   // Magnetic buttons
   document.addEventListener('mousemove', (e)=>{
