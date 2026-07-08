@@ -1,6 +1,3 @@
-// Netlify serverless function — stores data using Netlify Blobs
-// Built into Netlify — no external service, no CORS issues, completely free.
-
 const { getStore } = require('@netlify/blobs');
 
 const HEADERS = {
@@ -18,53 +15,48 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const store = getStore({ name: 'nocturne', consistency: 'strong' });
+    // Get siteID and token from Netlify's built-in environment
+    const siteID = process.env.NCT_SITE_ID || process.env.NETLIFY_SITE_ID;
+    const token  = process.env.NETLIFY_BLOBS_TOKEN || context?.clientContext?.custom?.netlify;
+
+    const store = getStore({
+      name: 'nocturne',
+      consistency: 'strong',
+      ...(siteID ? { siteID } : {}),
+      ...(token  ? { token  } : {}),
+    });
 
     if (event.httpMethod === 'GET') {
       const raw = await store.get('db');
       const data = raw ? JSON.parse(raw) : EMPTY;
-      return {
-        statusCode: 200,
-        headers: HEADERS,
-        body: JSON.stringify(data),
-      };
+      return { statusCode: 200, headers: HEADERS, body: JSON.stringify(data) };
     }
 
     if (event.httpMethod === 'PUT') {
       const incoming = JSON.parse(event.body || '{}');
-
-      // Safety: never overwrite with empty data
       if (!incoming.posts || !Array.isArray(incoming.posts)) {
         return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Invalid data' }) };
       }
 
-      // Read current data and merge — never lose existing posts
       const raw = await store.get('db');
       const current = raw ? JSON.parse(raw) : EMPTY;
-
-      // Keep posts from cloud that aren't in incoming (safety net)
       const incomingIds = new Set(incoming.posts.map(p => String(p.id)));
       const preserved = current.posts.filter(p => !incomingIds.has(String(p.id)));
       const merged = {
         posts: [...incoming.posts, ...preserved],
-        eng:   { ...current.eng,   ...incoming.eng   },
+        eng:   { ...current.eng, ...incoming.eng },
         users: incoming.users?.length ? incoming.users : current.users,
       };
 
       await store.set('db', JSON.stringify(merged));
       console.log(`Saved ${merged.posts.length} posts`);
-
-      return {
-        statusCode: 200,
-        headers: HEADERS,
-        body: JSON.stringify({ ok: true, posts: merged.posts.length }),
-      };
+      return { statusCode: 200, headers: HEADERS, body: JSON.stringify({ ok: true, posts: merged.posts.length }) };
     }
 
     return { statusCode: 405, headers: HEADERS, body: 'Method not allowed' };
 
   } catch (e) {
-    console.error('db function error:', e);
+    console.error('db function error:', e.message);
     return { statusCode: 500, headers: HEADERS, body: JSON.stringify({ error: e.message }) };
   }
 };
