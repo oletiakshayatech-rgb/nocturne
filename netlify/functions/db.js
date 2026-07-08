@@ -15,16 +15,10 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Get siteID and token from Netlify's built-in environment
-    const siteID = process.env.NCT_SITE_ID || process.env.NETLIFY_SITE_ID;
-    const token  = process.env.NETLIFY_BLOBS_TOKEN || context?.clientContext?.custom?.netlify;
+    const siteID = 'b85e281a-9b32-4033-812d-b6e84cd2537f';
+    const token  = 'nfp_P4hteLV2wsV2LJV9A8uNgrW1uKrSLLtX04a8';
 
-    const store = getStore({
-      name: 'nocturne',
-      consistency: 'strong',
-      ...(siteID ? { siteID } : {}),
-      ...(token  ? { token  } : {}),
-    });
+    const store = getStore({ name: 'nocturne', consistency: 'strong', siteID, token });
 
     if (event.httpMethod === 'GET') {
       const raw = await store.get('db');
