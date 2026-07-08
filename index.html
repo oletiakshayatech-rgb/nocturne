@@ -427,38 +427,149 @@ nav {
 /* ╔══════════════════════════════════════════════╗
    ║  BLOG PAGE                                   ║
    ╚══════════════════════════════════════════════╝ */
-#page-blog { max-width: 900px; margin: 0 auto; padding: 100px 5% 80px; }
-.blog-hdr { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; }
-.blog-hdr h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); }
+#page-blog {
+  max-width: 900px; margin: 0 auto; padding: 100px 5% 80px;
+  /* ── Archive palette — scoped locally, doesn't touch the rest of the site ── */
+  --arc-gold:  #B89A5A;
+  --arc-glow:  rgba(184,154,90,.25);
+  --arc-glass: rgba(255,255,255,.04);
+  --arc-glass2:rgba(255,255,255,.07);
+  --arc-text:  #E9E2D0;
+  --arc-sub:   rgba(233,226,208,.6);
+  --arc-ease:  cubic-bezier(.4,0,.2,1);
+}
+.blog-hdr { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
+.blog-hdr h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-family:var(--f-head); font-weight:400; }
+
+/* ✦ Archive heading dressing — subtitle + decorative divider ✦ */
+.archive-subtitle{
+  text-align:center; font-family:var(--f-sub); font-style:italic; font-size:.92rem;
+  color:var(--arc-sub); margin:-.4rem 0 1.1rem; letter-spacing:.02em;
+}
+.archive-divider{
+  display:flex; align-items:center; justify-content:center; gap:.85rem;
+  margin:0 0 2.2rem; color:var(--arc-gold); opacity:.55; user-select:none;
+}
+.archive-divider .adiv-line{ width:64px; height:1px; background:linear-gradient(to right, transparent, var(--arc-gold), transparent); }
+.archive-divider .adiv-star{ font-size:.7rem; }
 
 /* Toolbar: search, sort tabs, category/archive filters, tag cloud */
-.blog-toolbar { margin-bottom: 2rem; display:flex; flex-direction:column; gap:.9rem; }
+.blog-toolbar { margin-bottom: 2rem; display:flex; flex-direction:column; gap:1.1rem; }
+
+/* ── Search bar — soft glass, gold border, glowing focus ── */
+.bt-search{ position:relative; }
 .bt-search input {
-  width:100%; background:var(--bg-input); border:1px solid var(--bd); border-radius:var(--r1);
-  color:var(--tp); font-family:var(--f-body); font-size:.95rem; padding:.65rem 1rem;
+  width:100%; background:var(--arc-glass); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(184,154,90,.3); border-radius:var(--r2);
+  color:var(--arc-text); font-family:var(--f-body); font-size:.95rem; padding:.8rem 1.2rem;
+  transition:border-color .35s var(--arc-ease), box-shadow .35s var(--arc-ease), background .35s var(--arc-ease);
 }
-.bt-search input:focus { outline:none; border-color:var(--a); }
-.bt-sorts { display:flex; flex-wrap:wrap; gap:.4rem; }
-.bt-tab {
-  background:none; border:1px solid var(--bd); color:var(--ts); cursor:pointer;
-  font-family:var(--f-nav); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase;
-  padding:.5rem .9rem; border-radius:999px; transition:all var(--t) var(--ease);
+.bt-search input::placeholder{ color:var(--arc-sub); transition:opacity .3s var(--arc-ease); }
+.bt-search input:focus::placeholder{ opacity:.45; }
+.bt-search input:focus {
+  outline:none; border-color:var(--arc-gold); background:var(--arc-glass2);
+  box-shadow:0 0 0 1px var(--arc-glow), 0 0 22px var(--arc-glow);
 }
-.bt-tab:hover { border-color:var(--a); color:var(--tp); }
-.bt-tab.active { background:var(--as); border-color:var(--a); color:var(--a); }
-.bt-row2 { display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; }
-.bt-row2 select {
-  background:var(--bg-input); border:1px solid var(--bd); color:var(--ts);
-  font-family:var(--f-nav); font-size:.62rem; letter-spacing:.08em; padding:.5rem .7rem; border-radius:var(--r1);
+
+/* ── Sort pills (bt-tab) — luxury glass pill ── */
+.bt-sorts { display:flex; flex-wrap:wrap; gap:.5rem; }
+.bt-tab, .tag-pill {
+  position:relative; overflow:hidden;
+  background:var(--arc-glass); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(184,154,90,.35); color:var(--arc-text); cursor:pointer;
+  font-family:var(--f-nav); letter-spacing:.12em; text-transform:uppercase;
+  border-radius:999px; transition:transform .35s var(--arc-ease), border-color .35s var(--arc-ease),
+    background .35s var(--arc-ease), box-shadow .35s var(--arc-ease), color .35s var(--arc-ease);
 }
+.bt-tab{ font-size:.62rem; padding:.55rem 1.05rem; }
+.tag-pill{ font-size:.6rem; padding:.4rem .8rem; letter-spacing:.08em; color:var(--arc-sub); }
+/* faint paper-grain texture on every pill, luxury stationery feel */
+.bt-tab::before, .tag-pill::before{
+  content:''; position:absolute; inset:0; opacity:.05; pointer-events:none; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.bt-tab:hover, .tag-pill:hover{
+  border-color:var(--arc-gold); color:var(--arc-text);
+  background:var(--arc-glass2);
+  transform:translateY(-2.5px);
+  box-shadow:0 10px 26px rgba(0,0,0,.35), 0 0 16px var(--arc-glow);
+}
+.bt-tab.active, .tag-pill.active{
+  background:var(--arc-gold); border-color:var(--arc-gold); color:#1a1409;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.35), 0 6px 18px var(--arc-glow);
+  animation:pillShine .7s var(--arc-ease);
+}
+/* one-time gentle shine sweep across a newly-activated pill */
+.bt-tab.active::after, .tag-pill.active::after{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 48%, transparent 66%);
+  background-size:220% 100%; background-position:150% 0;
+  animation:shineSweep .8s var(--arc-ease);
+}
+@keyframes shineSweep{ from{ background-position:150% 0; } to{ background-position:-50% 0; } }
+@keyframes pillShine{ from{ transform:scale(.96); } to{ transform:scale(1); } }
+
+/* Ink bloom — appears inside a pill/button on click, fades into the fill */
+.ink-bloom{
+  position:absolute; border-radius:50%; background:rgba(10,8,5,.55);
+  transform:translate(-50%,-50%) scale(0); pointer-events:none;
+  animation:inkBloom .55s var(--arc-ease) forwards;
+}
+@keyframes inkBloom{
+  0%{ transform:translate(-50%,-50%) scale(0);   opacity:.6; }
+  60%{ opacity:.4; }
+  100%{ transform:translate(-50%,-50%) scale(1); opacity:0; }
+}
+
+.bt-row2 { display:flex; flex-wrap:wrap; gap:.7rem; align-items:center; }
+
+/* ── Custom "luxe" dropdown replacing the native <select> look ── */
+.luxe-select-wrap{ position:relative; display:inline-flex; }
+.luxe-select-wrap select{ position:absolute; inset:0; opacity:0; pointer-events:none; }
+.luxe-select-trigger{
+  display:inline-flex; align-items:center; gap:.5rem;
+  background:var(--arc-glass); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(184,154,90,.35); color:var(--arc-text);
+  font-family:var(--f-nav); font-size:.62rem; letter-spacing:.08em; text-transform:uppercase;
+  padding:.55rem 1rem; border-radius:var(--r1); cursor:pointer; white-space:nowrap;
+  transition:border-color .3s var(--arc-ease), background .3s var(--arc-ease), box-shadow .3s var(--arc-ease);
+}
+.luxe-select-trigger:hover{ border-color:var(--arc-gold); box-shadow:0 0 14px var(--arc-glow); }
+.luxe-select-trigger .lst-arrow{ opacity:.6; font-size:.62rem; transition:transform .3s var(--arc-ease); }
+.luxe-select-wrap.open .lst-arrow{ transform:rotate(180deg); }
+.luxe-select-panel{
+  position:absolute; top:calc(100% + 8px); left:0; min-width:190px; z-index:60;
+  background:#141210; border:1px solid rgba(184,154,90,.4); border-radius:var(--r1);
+  box-shadow:0 22px 50px rgba(0,0,0,.5);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  opacity:0; transform:translateY(-6px); pointer-events:none;
+  transition:opacity .28s var(--arc-ease), transform .28s var(--arc-ease);
+  max-height:260px; overflow-y:auto; padding:.35rem;
+}
+.luxe-select-wrap.open .luxe-select-panel{ opacity:1; transform:translateY(0); pointer-events:auto; }
+.luxe-opt{
+  padding:.55rem .8rem; font-family:var(--f-nav); font-size:.62rem; letter-spacing:.06em;
+  color:var(--arc-sub); border-radius:6px; cursor:pointer; transition:background .2s var(--arc-ease), color .2s var(--arc-ease);
+}
+.luxe-opt:hover, .luxe-opt.sel{ background:var(--arc-glow); color:var(--arc-text); }
+
 .bt-tags { display:flex; flex-wrap:wrap; gap:.4rem; }
-.tag-pill {
-  background:none; border:1px solid var(--bf); color:var(--tm); cursor:pointer;
-  font-family:var(--f-nav); font-size:.6rem; letter-spacing:.08em; padding:.35rem .7rem; border-radius:999px;
-  transition:all var(--t) var(--ease);
+
+/* ── Toolbar utility buttons (Surprise Me / Timeline / Gallery / Dome view) ── */
+.blog-toolbar .btn-ghost{
+  position:relative; overflow:hidden;
+  background:var(--arc-glass); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(184,154,90,.35); color:var(--arc-text);
+  transition:transform .35s var(--arc-ease), border-color .35s var(--arc-ease),
+    background .35s var(--arc-ease), box-shadow .35s var(--arc-ease);
 }
-.tag-pill:hover { border-color:var(--a); color:var(--a); }
-.tag-pill.active { background:var(--as); border-color:var(--a); color:var(--a); }
+.blog-toolbar .btn-ghost:hover{
+  border-color:var(--arc-gold); background:var(--arc-glass2);
+  transform:translateY(-2.5px); box-shadow:0 10px 26px rgba(0,0,0,.35), 0 0 16px var(--arc-glow);
+  color:var(--arc-text);
+}
+.blog-toolbar .btn-ghost span{ display:inline-block; transition:transform .3s var(--arc-ease); }
+.blog-toolbar .btn-ghost:hover span:first-child{ transform:rotate(-8deg) scale(1.1); }
 
 /* Featured story hero */
 .featured-hero {
@@ -1515,9 +1626,407 @@ footer {
   .modal-tab{font-size:.58rem;padding:.5rem .7rem}
   .approve-panel{overflow-x:auto}
 }
+
+/* ╔══════════════════════════════════════════════╗
+   ║  ✨ INTRO REVEAL                              ║
+   ╚══════════════════════════════════════════════╝ */
+#introReveal{
+  position:fixed; inset:0; z-index:99999; background:#07060a;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  transition:opacity .9s var(--ease), visibility .9s var(--ease);
+}
+#introReveal.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+.intro-word{ display:flex; gap:.02em; overflow:hidden; }
+.intro-word span{
+  font-family:var(--f-head); font-size:clamp(2.6rem,8vw,5rem); color:var(--tp);
+  opacity:0; transform:translateY(24px); display:inline-block;
+  animation:introLetter .8s var(--ease) forwards;
+}
+.intro-sub{
+  margin-top:1.1rem; display:flex; gap:1.4rem;
+  font-family:var(--f-nav); font-size:.68rem; letter-spacing:.32em; text-transform:uppercase;
+  color:var(--tm); opacity:0; animation:introFadeUp .9s var(--ease) forwards;
+  animation-delay:1.05s;
+}
+.intro-rule{
+  width:0; height:1px; background:var(--a); margin-top:1.6rem; opacity:.5;
+  animation:introRule 1s var(--ease) forwards; animation-delay:1.4s;
+}
+@keyframes introLetter{ to{ opacity:1; transform:translateY(0); } }
+@keyframes introFadeUp{ to{ opacity:1; } }
+@keyframes introRule{ to{ width:120px; } }
+
+/* ╔══════════════════════════════════════════════╗
+   ║  🌌 AMBIENT BACKGROUND FX                    ║
+   ╚══════════════════════════════════════════════╝ */
+#bgFX{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+
+/* 🖋 Ink Flow — organic, slow-bleeding ink bloom canvas */
+#inkCanvas{
+  position:absolute; inset:-12%; width:124%; height:124%;
+  filter:blur(42px);
+  opacity:0;
+  transition:opacity 2.6s var(--ease);
+  mix-blend-mode:screen;
+}
+#inkCanvas.show{ opacity:1; }
+@media(max-width:700px){
+  #inkCanvas{ filter:blur(26px); }
+}
+@media(prefers-reduced-motion:reduce){
+  #inkCanvas{ filter:blur(50px); }
+}
+
+.bgfx-grain{
+  position:absolute; inset:-100px; opacity:.035; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grainMove 1.4s steps(4) infinite;
+}
+@keyframes grainMove{
+  0%,100%{ transform:translate(0,0); } 25%{ transform:translate(-2%,2%); }
+  50%{ transform:translate(2%,-2%); } 75%{ transform:translate(-1%,-1%); }
+}
+.bgfx-particle{
+  position:absolute; border-radius:50%; background:var(--a); opacity:.18;
+  animation:floatUp linear infinite;
+}
+@keyframes floatUp{
+  0%{ transform:translateY(0) translateX(0); opacity:0; }
+  10%{ opacity:.22; }
+  90%{ opacity:.15; }
+  100%{ transform:translateY(-110vh) translateX(20px); opacity:0; }
+}
+body > *:not(#bgFX):not(#introReveal){ position:relative; z-index:1; }
+
+/* ╔══════════════════════════════════════════════╗
+   ║  📖 READING PROGRESS + SCROLL CIRCLE          ║
+   ╚══════════════════════════════════════════════╝ */
+#readProgressWrap{
+  position:fixed; top:0; left:0; right:0; height:2px; z-index:950;
+  background:rgba(201,168,124,.08); display:none;
+}
+#readProgressWrap.show{ display:block; }
+#readProgressBar{
+  height:100%; width:0%; background:linear-gradient(90deg,var(--a),var(--ah));
+  transition:width .08s linear;
+}
+#scrollCircle{
+  position:fixed; right:20px; bottom:20px; z-index:940;
+  width:52px; height:52px; border-radius:50%;
+  background:rgba(12,11,10,.82); border:1px solid var(--bd);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; opacity:0; transform:translateY(12px) scale(.9); pointer-events:none;
+  transition:opacity .3s var(--ease), transform .3s var(--ease);
+}
+#scrollCircle.show{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+#scrollCircle svg{ position:absolute; inset:0; transform:rotate(-90deg); }
+#scrollCircle circle{ fill:none; stroke-width:2; }
+#scrollCircle .sc-bg{ stroke:var(--bf); }
+#scrollCircle .sc-fg{ stroke:var(--a); stroke-linecap:round; transition:stroke-dashoffset .1s linear; }
+#scrollCircle .sc-arrow{ color:var(--a); font-size:.95rem; }
+#scrollCircle .sc-pct{ position:absolute; font-family:var(--f-nav); font-size:.44rem; letter-spacing:.05em; color:var(--tm); bottom:5px; }
+
+/* Drop cap */
+.read-article > p:first-of-type::first-letter,
+.pub-content > p:first-of-type::first-letter{
+  font-family:var(--f-head); font-size:4.6em; float:left; line-height:.8;
+  padding:.06em .07em 0 0; color:var(--a);
+}
+
+/* Paragraph fade on scroll */
+.fade-scroll{ opacity:0; transform:translateY(18px); transition:opacity .7s var(--ease), transform .7s var(--ease); }
+.fade-scroll.in-view{ opacity:1; transform:translateY(0); }
+
+/* Pull quotes */
+.read-article blockquote.pull-quote{
+  border-left:none; text-align:center; max-width:520px; margin:2.6rem auto;
+  font-family:var(--f-sub); font-style:italic; font-size:1.55rem; line-height:1.5;
+  color:var(--a); background:none; padding:0 1rem;
+}
+.read-article blockquote.pull-quote::before{
+  content:'“'; display:block; font-family:var(--f-head); font-size:2.4rem; color:var(--ab); line-height:.4; margin-bottom:.6rem;
+}
+
+/* Section dividers ✦ ✦ ✦ */
+.sec-divider{
+  display:flex; align-items:center; justify-content:center; gap:.9rem;
+  color:var(--ab); font-size:.85rem; letter-spacing:.5em; margin:3rem 0;
+  user-select:none;
+}
+
+/* Split-text heading letters */
+.split-letter{ display:inline-block; opacity:0; transform:translateY(.4em); animation:splitIn .6s var(--ease) forwards; }
+@keyframes splitIn{ to{ opacity:1; transform:translateY(0); } }
+
+/* Hero image zoom-in reveal */
+.hero-zoom{ animation:heroZoom 1.4s var(--ease) both; }
+@keyframes heroZoom{ from{ transform:scale(1.05); } to{ transform:scale(1); } }
+
+/* ── Card polish: lift / zoom / gradient / badge / arrow ── */
+.post-card{ position:relative; }
+.card-thumb{ position:relative; }
+.card-thumb img{ transition:transform .5s var(--ease), opacity var(--t); }
+.post-card:hover .card-thumb img{ transform:scale(1.1); }
+.card-thumb::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(6,5,4,.85) 0%, transparent 55%);
+  opacity:0; transition:opacity var(--t) var(--ease);
+}
+.post-card:hover .card-thumb::after{ opacity:1; }
+.card-float-badge{
+  position:absolute; top:10px; left:10px; z-index:2;
+  font-family:var(--f-nav); font-size:.54rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--a); background:rgba(10,8,5,.72); border:1px solid var(--ab); border-radius:999px;
+  padding:4px 10px; backdrop-filter:blur(6px);
+}
+.card-readmore{
+  display:inline-flex; align-items:center; gap:.35rem; margin-top:.6rem;
+  font-family:var(--f-nav); font-size:.6rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--a);
+}
+.card-readmore .arrow{ display:inline-block; transition:transform var(--t) var(--ease); }
+.post-card:hover .card-readmore .arrow{ transform:translateX(5px); }
+
+.pub-post{ transition:transform var(--t) var(--ease), box-shadow var(--t) var(--ease); border-radius:var(--r2); }
+.pub-post:hover{ transform:translateY(-4px); box-shadow:0 18px 40px rgba(0,0,0,.4); }
+
+/* Attention grabber ribbons */
+.attn-ribbon{
+  display:inline-flex; align-items:center; gap:.3rem;
+  font-family:var(--f-nav); font-size:.54rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  padding:2px 9px; border-radius:999px; border:1px solid;
+}
+.attn-trending{ color:#e0955a; border-color:rgba(224,149,90,.35); background:rgba(224,149,90,.08); }
+.attn-new{ color:#7abf8a; border-color:rgba(122,191,138,.35); background:rgba(122,191,138,.08); }
+.attn-updated{ color:var(--a); border-color:var(--ab); background:var(--as); }
+
+/* Like burst particles */
+.like-particle-wrap{ position:relative; display:inline-flex; }
+.heart-particle{
+  position:absolute; left:50%; top:50%; pointer-events:none;
+  color:var(--a); font-size:.7rem; opacity:1;
+  animation:heartBurst .7s ease-out forwards;
+}
+@keyframes heartBurst{
+  to{ transform:translate(var(--dx),var(--dy)) scale(.4); opacity:0; }
+}
+
+/* Cursor effects */
+#cursorFollow{
+  position:fixed; top:0; left:0; z-index:9500; pointer-events:none;
+  width:86px; height:86px; border-radius:50%;
+  background:var(--a); color:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--f-nav); font-size:.62rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  opacity:0; transform:translate(-50%,-50%) scale(.6);
+  transition:opacity .25s var(--ease), transform .25s var(--ease);
+}
+#cursorFollow.show{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+@media (hover:none), (max-width:900px){ #cursorFollow{ display:none!important; } }
+
+/* Lightbox */
+.lightbox-bg{
+  position:fixed; inset:0; z-index:9800; background:rgba(4,3,2,.94);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .3s var(--ease);
+  backdrop-filter:blur(6px);
+}
+.lightbox-bg.open{ opacity:1; pointer-events:auto; }
+.lightbox-bg img{ max-width:88vw; max-height:86vh; border-radius:var(--r1); box-shadow:0 30px 80px rgba(0,0,0,.6); }
+.lightbox-close{
+  position:absolute; top:22px; right:28px; color:var(--tp); font-size:1.8rem; cursor:pointer;
+  background:none; border:none; line-height:1;
+}
+.read-article img, .pub-content img{ cursor:zoom-in; }
+
+/* Timeline (archive view) */
+.timeline{ position:relative; margin:1rem 0 2rem; padding-left:1.6rem; }
+.timeline::before{ content:''; position:absolute; left:5px; top:0; bottom:0; width:1px; background:var(--bf); }
+.timeline-item{ position:relative; padding-bottom:1.8rem; }
+.timeline-dot{ position:absolute; left:-1.6rem; top:.3rem; width:9px; height:9px; border-radius:50%; background:var(--a); box-shadow:0 0 0 3px var(--ag); }
+.timeline-date{ font-family:var(--f-nav); font-size:.58rem; letter-spacing:.14em; text-transform:uppercase; color:var(--tm); margin-bottom:.3rem; }
+.timeline-title{ font-family:var(--f-sub); font-size:1.08rem; color:var(--tp); cursor:pointer; }
+.timeline-title:hover{ color:var(--a); }
+
+/* Quote of the day */
+.quote-of-day{
+  text-align:center; max-width:560px; margin:0 auto; padding:1rem 0;
+  font-family:var(--f-sub); font-style:italic; color:var(--ts); font-size:1.08rem; line-height:1.6;
+}
+.quote-of-day .qod-src{ display:block; margin-top:.5rem; font-family:var(--f-nav); font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--tm); font-style:normal; }
+
+/* Footer quote */
+.footer-quote{
+  display:block; font-family:var(--f-sub); font-style:italic; color:var(--a);
+  font-size:1rem; margin-bottom:.6rem;
+}
+
+/* Magnetic buttons handled via inline transform in JS */
+.btn, .nav-pill{ will-change:transform; }
+
+/* Glass nav reinforcement */
+nav{ background:rgba(12,11,10,.7)!important; }
+
+/* Search highlight */
+mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2px; border-radius:2px; }
+
+/* Category rearrange transition */
+.posts-list, .post-grid{ transition:opacity .25s var(--ease); }
+.posts-list.rearranging, .post-grid.rearranging{ opacity:.35; }
+
+/* ╔══════════════════════════════════════════════╗
+   ║  🎞 MASONRY GALLERY                           ║
+   ╚══════════════════════════════════════════════╝ */
+.masonry-gallery{
+  column-count:3; column-gap:1rem; margin:1rem 0 2rem;
+}
+@media(max-width:900px){ .masonry-gallery{ column-count:2; } }
+@media(max-width:560px){ .masonry-gallery{ column-count:1; } }
+.masonry-item{
+  break-inside:avoid; margin-bottom:1rem; border-radius:var(--r2); overflow:hidden;
+  position:relative; cursor:pointer; border:1px solid var(--bf);
+  background:var(--bg-card);
+  transition:transform var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.masonry-item:hover{ transform:translateY(-5px); box-shadow:0 18px 40px rgba(0,0,0,.45); border-color:var(--bd); }
+.masonry-item img{ width:100%; display:block; transition:transform .5s var(--ease); }
+.masonry-item:hover img{ transform:scale(1.06); }
+.masonry-item .mi-overlay{
+  position:absolute; inset:0; display:flex; align-items:flex-end;
+  background:linear-gradient(to top, rgba(6,5,4,.88) 0%, transparent 55%);
+  opacity:0; transition:opacity var(--t) var(--ease);
+  padding:1rem;
+}
+.masonry-item:hover .mi-overlay{ opacity:1; }
+.mi-title{ font-family:var(--f-sub); font-style:italic; font-size:1rem; color:var(--tp); line-height:1.3; }
+.mi-tag{ font-family:var(--f-nav); font-size:.54rem; letter-spacing:.14em; text-transform:uppercase; color:var(--a); display:block; margin-bottom:.3rem; }
+
+/* ╔══════════════════════════════════════════════╗
+   ║  🌐 DOME GALLERY (Vision-Pro style)           ║
+   ╚══════════════════════════════════════════════╝ */
+.dome-modal-bg{
+  position:fixed; inset:0; z-index:9700; background:rgba(4,3,2,.95);
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+  opacity:0; pointer-events:none; transition:opacity .4s var(--ease);
+  backdrop-filter:blur(10px);
+}
+.dome-modal-bg.open{ opacity:1; pointer-events:auto; }
+.dome-close{
+  position:absolute; top:22px; right:28px; color:var(--tp); font-size:1.8rem; cursor:pointer;
+  background:none; border:none; line-height:1; z-index:2;
+}
+.dome-hint{
+  position:absolute; top:26px; left:50%; transform:translateX(-50%);
+  font-family:var(--f-nav); font-size:.62rem; letter-spacing:.2em; text-transform:uppercase; color:var(--tm);
+}
+.dome-stage{
+  width:100%; height:100%; perspective:1200px; display:flex; align-items:center; justify-content:center;
+}
+.dome-scene{
+  position:relative; width:1px; height:1px; transform-style:preserve-3d;
+  transition:transform .15s linear;
+}
+.dome-item{
+  position:absolute; width:150px; height:110px; margin:-55px 0 0 -75px;
+  border-radius:var(--r2); overflow:hidden; border:1px solid var(--ab);
+  box-shadow:0 20px 50px rgba(0,0,0,.5); cursor:pointer;
+  background:var(--bg-card);
+  transition:transform .4s var(--ease), opacity .4s var(--ease), box-shadow .4s var(--ease);
+}
+.dome-item img{ width:100%; height:100%; object-fit:cover; opacity:.92; }
+.dome-item:hover img{ opacity:1; }
+.dome-center{
+  position:absolute; width:1px; height:1px;
+  font-family:var(--f-nav); font-size:.6rem; letter-spacing:.3em; text-transform:uppercase; color:var(--tm);
+  display:flex; align-items:center; justify-content:center; white-space:nowrap;
+}
+
+/* ╔══════════════════════════════════════════════╗
+   ║  🎡 INFINITE HORIZONTAL GALLERY (Netflix)     ║
+   ╚══════════════════════════════════════════════╝ */
+.trending-strip-wrap{
+  max-width:780px; margin:0 auto; padding:2rem 5% 0; overflow:hidden;
+}
+.trending-strip-label{
+  font-family:var(--f-nav); font-size:.61rem; font-weight:500; letter-spacing:.28em; text-transform:uppercase;
+  color:var(--tm); margin-bottom:1.2rem; display:flex; align-items:center; gap:1rem;
+}
+.trending-strip-label::after{ content:''; flex:1; height:1px; background:var(--bf); }
+.trending-track-outer{ overflow:hidden; position:relative; }
+.trending-track-outer::before, .trending-track-outer::after{
+  content:''; position:absolute; top:0; bottom:0; width:60px; z-index:2; pointer-events:none;
+}
+.trending-track-outer::before{ left:0; background:linear-gradient(to right, var(--bg), transparent); }
+.trending-track-outer::after{ right:0; background:linear-gradient(to left, var(--bg), transparent); }
+.trending-track{
+  display:flex; gap:1rem; width:max-content;
+  animation:trendingScroll 32s linear infinite;
+}
+.trending-track-outer:hover .trending-track{ animation-play-state:paused; }
+@keyframes trendingScroll{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-50%); }
+}
+.trending-card{
+  width:190px; flex-shrink:0; border-radius:var(--r1); overflow:hidden; cursor:pointer;
+  border:1px solid var(--bf); background:var(--bg-card);
+  transition:transform var(--t) var(--ease), border-color var(--t) var(--ease);
+}
+.trending-card:hover{ transform:translateY(-4px) scale(1.03); border-color:var(--bd); z-index:1; }
+.trending-card-thumb{ height:106px; overflow:hidden; background:linear-gradient(135deg,#211c14 0%,#17120d 100%); }
+.trending-card-thumb img{ width:100%; height:100%; object-fit:cover; transition:transform .5s var(--ease); }
+.trending-card:hover .trending-card-thumb img{ transform:scale(1.1); }
+.trending-card-body{ padding:.65rem .75rem; }
+.trending-card-tag{ font-family:var(--f-nav); font-size:.5rem; letter-spacing:.12em; text-transform:uppercase; color:var(--a); margin-bottom:.25rem; }
+.trending-card-title{ font-family:var(--f-sub); font-size:.86rem; font-style:italic; color:var(--tp); line-height:1.3;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 </style>
 </head>
 <body>
+
+<!-- ✨ Intro reveal splash -->
+<div id="introReveal">
+  <div class="intro-word" id="introWord"></div>
+  <div class="intro-sub">Thoughts <span style="opacity:.3">·</span> Stories <span style="opacity:.3">·</span> Research</div>
+  <div class="intro-rule"></div>
+</div>
+
+<!-- 🌌 Ambient background -->
+<div id="bgFX">
+  <canvas id="inkCanvas"></canvas>
+  <div class="bgfx-grain"></div>
+  <div id="bgParticles"></div>
+</div>
+
+<!-- 📖 Reading progress bar -->
+<div id="readProgressWrap"><div id="readProgressBar"></div></div>
+
+<!-- ⬤ Scroll progress circle -->
+<div id="scrollCircle" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">
+  <svg viewBox="0 0 52 52">
+    <circle class="sc-bg" cx="26" cy="26" r="23"></circle>
+    <circle class="sc-fg" id="scFg" cx="26" cy="26" r="23" stroke-dasharray="144.5" stroke-dashoffset="144.5"></circle>
+  </svg>
+  <span class="sc-arrow">↑</span>
+</div>
+
+<!-- 🎨 Custom cursor follower (desktop) -->
+<div id="cursorFollow"></div>
+
+<!-- 🖼 Lightbox -->
+<div class="lightbox-bg" id="lightboxBg" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- 🌐 Dome Gallery -->
+<div class="dome-modal-bg" id="domeModalBg" onclick="if(event.target===event.currentTarget) closeDomeGallery()">
+  <button class="dome-close" onclick="closeDomeGallery()">&times;</button>
+  <div class="dome-hint">Move your mouse to look around</div>
+  <div class="dome-stage" id="domeStage">
+    <div class="dome-scene" id="domeScene"></div>
+  </div>
+</div>
 
 <!-- ════════════════ NAV ════════════════ -->
 <nav id="topnav">
@@ -1575,17 +2084,22 @@ footer {
   <div class="about-body">
     <p>Nocturne began as a personal journal — a habit of writing after the house goes quiet. There is a particular kind of clarity that comes late at night, when the world stops demanding things and language starts to feel like it belongs to you again.</p>
     <p>This blog is home to essays, reflections, and fragments: on creativity, solitude, books, and the odd beautiful difficulty of being a person who writes. Not always polished, never performative. Just honest.</p>
+    <div class="sec-divider">✦ ✦ ✦</div>
     <p>The aesthetic is deliberate. Dark backgrounds and warm type are a quiet rebellion against the relentless brightness of feeds and dashboards. To read here, you slow down a little. That is the point.</p>
     <p class="about-sig">— The editor, writing by lamplight</p>
+    <div class="sec-divider">✦ ✦ ✦</div>
+    <div class="quote-of-day" id="quoteOfDay"></div>
   </div>
 </div>
 
 <!-- ════════════════ BLOG ════════════════ -->
 <div class="page" id="page-blog">
   <div class="blog-hdr">
-    <h1>The Archive</h1>
+    <h1>Browse the Archive</h1>
     <button class="btn btn-primary btn-sm" id="writeBtnPage" onclick="handleWrite()" style="display:none">+ New post</button>
   </div>
+  <p class="archive-subtitle">Every story leaves a trace.</p>
+  <div class="archive-divider"><span class="adiv-line"></span><span class="adiv-star">✦</span><span class="adiv-line"></span></div>
   <!-- Shown only to guests / non-approved readers -->
   <p id="readOnlyNote" style="font-family:var(--f-nav);font-size:.67rem;letter-spacing:.1em;color:var(--tm);margin-bottom:2rem;display:none">
     Reading as a guest. <button onclick="openAuth('signup')" style="background:none;border:none;color:var(--a);font-family:var(--f-nav);font-size:.67rem;letter-spacing:.1em;cursor:pointer;padding:0;text-decoration:underline">Apply to write →</button>
@@ -1609,10 +2123,19 @@ footer {
     <div class="bt-row2">
       <select id="blogCategory" onchange="applyBlogFilters()"><option value="">All categories</option></select>
       <select id="blogArchive"  onchange="applyBlogFilters()"><option value="">All time</option></select>
-      <button class="btn btn-ghost btn-sm" onclick="surpriseMe()">🎲 Surprise me</button>
+      <button class="btn btn-ghost btn-sm" onclick="surpriseMe()"><span>🎲</span> Surprise me</button>
+      <button class="btn btn-ghost btn-sm" id="timelineToggleBtn" onclick="toggleTimelineView()"><span>📅</span> Timeline</button>
+      <button class="btn btn-ghost btn-sm" id="masonryToggleBtn" onclick="toggleMasonryView()"><span>🎞</span> Gallery</button>
+      <button class="btn btn-ghost btn-sm" onclick="openDomeGallery()"><span>🌐</span> Dome view</button>
     </div>
     <div class="bt-tags" id="blogTagCloud"></div>
   </div>
+
+  <!-- Timeline (archive) view -->
+  <div class="timeline" id="archiveTimeline" style="display:none"></div>
+
+  <!-- Masonry gallery view -->
+  <div class="masonry-gallery" id="masonryGallery" style="display:none"></div>
 
   <!-- EDITOR -->
   <div id="editor-wrap">
@@ -1763,6 +2286,14 @@ footer {
       <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       Share
     </button>
+  </div>
+
+  <!-- 🎡 Trending now — infinite horizontal strip -->
+  <div class="trending-strip-wrap" id="trendingStripWrap" style="display:none">
+    <p class="trending-strip-label">Trending now</p>
+    <div class="trending-track-outer">
+      <div class="trending-track" id="trendingTrack"></div>
+    </div>
   </div>
 
   <!-- Comments -->
@@ -2015,6 +2546,7 @@ footer {
 <div class="toast" id="toast"><span class="toast-dot"></span><span id="toastMsg"></span></div>
 
 <footer>
+  <span class="footer-quote">"There is always another story waiting."</span>
   <span class="footer-brand">Noc<em>t</em>urne</span>
   <span class="footer-copy">© 2026 · Built with Claude</span>
 </footer>
@@ -2448,11 +2980,34 @@ async function doLogin() {
   const h = await sha256(pass + SALT);
 
   // Admin check
-  if (email === ADMIN_EMAIL && h === ADMIN_HASH) {
-    curUser = { email: ADMIN_EMAIL, name:'Akshaya', role:'admin', hash:h };
-    sessionStorage.setItem('nct_sess', JSON.stringify(curUser));
-    closeAuth(); updateNav(); renderPosts();
-    toast('Signed in as admin'); return;
+  if (email === ADMIN_EMAIL) {
+    if (!ADMIN_HASH) {
+      // First sign-in on this device: no admin password has been set yet.
+      // Whatever the person enters here becomes the admin password —
+      // this replaces the old approach of shipping a fixed default
+      // password inside the page source, which anyone could read via
+      // View Source. Require a reasonable length so it's not trivial.
+      if (pass.length < 8) {
+        err.textContent = 'First sign-in: choose an admin password (8+ characters).';
+        err.classList.add('show');
+        return;
+      }
+      ADMIN_HASH = h;
+      localStorage.setItem('nct_ahash', ADMIN_HASH);
+      curUser = { email: ADMIN_EMAIL, name:'Akshaya', role:'admin', hash:h };
+      sessionStorage.setItem('nct_sess', JSON.stringify(curUser));
+      closeAuth(); updateNav(); renderPosts();
+      toast('Admin password set — you\'re signed in. Remember this password!');
+      return;
+    }
+    if (h === ADMIN_HASH) {
+      curUser = { email: ADMIN_EMAIL, name:'Akshaya', role:'admin', hash:h };
+      sessionStorage.setItem('nct_sess', JSON.stringify(curUser));
+      closeAuth(); updateNav(); renderPosts();
+      toast('Signed in as admin'); return;
+    }
+    err.textContent='Incorrect email or password.'; err.classList.add('show');
+    document.getElementById('liPass').value=''; return;
   }
 
   // User lookup
@@ -3742,6 +4297,7 @@ function populateBlogControls(posts){
     const cats = [...new Set(posts.map(p=>p.tag||'Essay'))].sort((a,b)=>a.localeCompare(b));
     catSel.innerHTML = '<option value="">All categories</option>' +
       cats.map(c=>`<option value="${esc(c)}" ${c===cur?'selected':''}>${esc(c)}</option>`).join('');
+    syncLuxeTrigger(catSel);
   }
   const arSel = document.getElementById('blogArchive');
   if (arSel) {
@@ -3751,6 +4307,7 @@ function populateBlogControls(posts){
       .sort((a,b)=> new Date('1 '+b) - new Date('1 '+a));
     arSel.innerHTML = '<option value="">All time</option>' +
       months.map(m=>`<option value="${esc(m)}" ${m===cur?'selected':''}>${esc(m)}</option>`).join('');
+    syncLuxeTrigger(arSel);
   }
   const cloud = document.getElementById('blogTagCloud');
   if (cloud) {
@@ -3904,7 +4461,9 @@ function buildPostHTML(p, canWrite, isAdmin){
         <span class="pub-thumb-empty-lbl">No cover</span>
        </div>`;
 
-  const badges = `${p.featured?'<span class="pub-badge">★ Featured</span>':''}${p.pick?'<span class="pub-badge">✎ Editor\'s Pick</span>':''}`;
+  const isNew = (Date.now() - postTs(p)) < 1000*60*60*24*7;
+  const isTrending = eng.likes*2+eng.views >= 8;
+  const badges = `${p.featured?'<span class="pub-badge">★ Featured</span>':''}${p.pick?'<span class="pub-badge">✎ Editor\'s Pick</span>':''}${isTrending?'<span class="attn-ribbon attn-trending">🔥 Trending</span>':''}${isNew?'<span class="attn-ribbon attn-new">🆕 New</span>':''}${p.updated?'<span class="attn-ribbon attn-updated">✨ Updated</span>':''}`;
 
   const ctrl = (canWrite || isAdmin)
     ? `<div class="pub-ctrl" onclick="event.stopPropagation()">
@@ -3917,12 +4476,12 @@ function buildPostHTML(p, canWrite, isAdmin){
 
   return `
 <div class="pub-post" id="pp-${p.id}">
-  <div class="pub-hdr" onclick="openPost(${p.id},'blog')">
+  <div class="pub-hdr" onclick="openPost(${p.id},'blog')" data-cursor-label="Read →">
 
     <div class="pub-hdr-l">
       <div class="pub-card-top">
         <div class="pub-tag">${esc(p.tag||'Essay')}</div>
-        <div class="pub-title">${esc(p.title)}</div>
+        <div class="pub-title">${highlightTerm(p.title, _blogSearch)}</div>
         ${sub}
         ${badges ? `<div class="pub-badges">${badges}</div>` : ''}
       </div>
@@ -4015,6 +4574,18 @@ function openPost(id, fromPage){
   document.getElementById('readCommentCnt').textContent = eng.comments.length;
   document.getElementById('readCthread').innerHTML = renderComments(id);
 
+  // Give the post its own URL so it truly opens as its own page —
+  // shareable, refreshable, and back-button aware — instead of feeling
+  // like an in-page dropdown/expansion.
+  if(fromPage !== '_popstate'){
+    const slug = slugify(p.title);
+    const url  = `/post/${id}-${slug}`;
+    if(location.pathname !== url){
+      history.pushState({ nctView:'read', id, from:(fromPage||'blog') }, '', url);
+    }
+  }
+  document.title = (p.title ? p.title + ' — ' : '') + 'Nocturne';
+
   // Navigate to read page — no auth check, everyone can read
   goPage('read');
   document.getElementById('readBackBtn').style.display = 'flex';
@@ -4031,10 +4602,57 @@ function openPost(id, fromPage){
   }
 }
 
-function closePost(){
+function closePost(fromPopstate){
   document.getElementById('readBackBtn').style.display = 'none';
   goPage(_readingFrom);
   _readingId = null;
+  document.title = 'Nocturne';
+  if(!fromPopstate){
+    const backUrl = _readingFrom === 'home' ? '/' : `/${_readingFrom}`;
+    if(location.pathname !== backUrl){
+      history.pushState({ nctView: _readingFrom }, '', backUrl);
+    }
+  }
+}
+
+/* Turn a post title into a clean, readable URL segment */
+function slugify(s){
+  return String(s||'')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'')
+    .slice(0,60) || 'post';
+}
+
+/* Back/forward browser navigation — keep it in sync with the SPA state
+   instead of leaving the user on a stale view. */
+window.addEventListener('popstate', (e)=>{
+  const state = e.state;
+  if(state && state.nctView === 'read' && state.id != null){
+    openPost(state.id, '_popstate');
+  } else if(state && state.nctView){
+    closePost(true);
+    goPage(state.nctView);
+  } else {
+    closePost(true);
+    goPage('home');
+  }
+});
+
+/* Deep-link support: visiting /post/<id>-<slug> directly (a shared link,
+   a refresh, or a bookmark) opens straight to that article — the very
+   first thing the reader sees — rather than the home page. */
+function openFromCurrentURL(){
+  const m = location.pathname.match(/^\/post\/(\d+)/);
+  if(m){
+    const posts = loadPosts();
+    if(posts.find(x=>String(x.id)===m[1])){
+      openPost(m[1], '_popstate');
+      history.replaceState({ nctView:'read', id:Number(m[1]), from:'home' }, '', location.pathname);
+      return true;
+    }
+  }
+  return false;
 }
 
 function readToggleLike(){
@@ -4048,6 +4666,7 @@ function readToggleLike(){
   const btn = document.getElementById('readLikeBtn');
   btn.classList.toggle('liked', liked);
   btn.querySelector('.hico').textContent = liked ? '♥' : '♡';
+  if(liked) burstHearts(btn);
   document.getElementById('readLikeCnt').textContent = eng.likes;
   document.getElementById('readLikes').textContent   = eng.likes;
   const lh = document.getElementById('lcnt-h-'+_readingId);
@@ -4436,8 +5055,11 @@ function renderHomeGrid(){
            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
          </div>`;
     return `
-    <div class="post-card" onclick="openPost(${p.id},'home')">
-      <div class="card-thumb">${thumb}</div>
+    <div class="post-card" onclick="openPost(${p.id},'home')" data-cursor-label="Read →">
+      <div class="card-thumb">
+        <span class="card-float-badge">${esc(p.tag||'Essay')}</span>
+        ${thumb}
+      </div>
       <div class="card-body">
         <div class="card-tag">${esc(p.tag)}</div>
         <div class="card-title">${esc(p.title)}</div>
@@ -4446,6 +5068,7 @@ function renderHomeGrid(){
           <span>${esc(p.author)}</span>
           <span>♥ ${eng.likes} · 👁 ${eng.views}</span>
         </div>
+        <div class="card-readmore">Read more <span class="arrow">→</span></div>
       </div>
     </div>`;
   }).join('');
@@ -4476,14 +5099,729 @@ function toast(msg){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function strip(s){const d=document.createElement('div');d.innerHTML=s;return d.textContent||'';}
 
+/* ══════════════════════════════════════
+   ✨ INTRO REVEAL
+══════════════════════════════════════ */
+function runIntroReveal(){
+  const wordEl = document.getElementById('introWord');
+  const word = 'NOCTURNE';
+  wordEl.innerHTML = word.split('').map((ch,i)=>`<span style="animation-delay:${(i*0.055).toFixed(2)}s">${ch}</span>`).join('');
+  setTimeout(()=>{
+    const el = document.getElementById('introReveal');
+    if(el) el.classList.add('hide');
+    setTimeout(()=>{ el && el.remove(); }, 950);
+  }, 2050);
+}
+
+/* ══════════════════════════════════════
+   SPLIT-TEXT HEADING ANIMATION
+══════════════════════════════════════ */
+function splitText(el){
+  if(!el || el.dataset.split) return;
+  el.dataset.split = '1';
+  const text = el.textContent;
+  el.innerHTML = text.split('').map((ch,i)=>
+    `<span class="split-letter" style="animation-delay:${(i*0.035).toFixed(2)}s">${ch===' '?'&nbsp;':ch}</span>`
+  ).join('');
+}
+
+/* ══════════════════════════════════════
+   READING PROGRESS + SCROLL CIRCLE
+══════════════════════════════════════ */
+const SC_CIRCUMFERENCE = 144.5;
+function onScrollProgress(){
+  const scTop = window.scrollY || document.documentElement.scrollTop;
+  const docH  = document.documentElement.scrollHeight - window.innerHeight;
+  const pct   = docH>0 ? Math.min(1, scTop/docH) : 0;
+
+  const circle = document.getElementById('scFg');
+  if(circle) circle.style.strokeDashoffset = (SC_CIRCUMFERENCE * (1-pct)).toFixed(1);
+  const sc = document.getElementById('scrollCircle');
+  if(sc) sc.classList.toggle('show', scTop > 400);
+
+  // Reading progress bar — only meaningful on the read page
+  const wrap = document.getElementById('readProgressWrap');
+  const onRead = document.getElementById('page-read')?.classList.contains('active');
+  if(wrap){
+    wrap.classList.toggle('show', !!onRead);
+    if(onRead){
+      const art = document.getElementById('readArticle');
+      if(art){
+        const rect = art.getBoundingClientRect();
+        const artTop = rect.top + scTop;
+        const artH   = art.offsetHeight;
+        const readPct = Math.max(0, Math.min(1, (scTop + window.innerHeight*0.4 - artTop) / artH));
+        document.getElementById('readProgressBar').style.width = (readPct*100).toFixed(1)+'%';
+      }
+    }
+  }
+}
+window.addEventListener('scroll', onScrollProgress, { passive:true });
+window.addEventListener('resize', onScrollProgress);
+
+/* ══════════════════════════════════════
+   PARAGRAPH / IMAGE FADE-IN ON SCROLL
+══════════════════════════════════════ */
+let _fadeObserver;
+function wireScrollFades(){
+  if(!_fadeObserver){
+    _fadeObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(en=>{
+        if(en.isIntersecting){ en.target.classList.add('in-view'); _fadeObserver.unobserve(en.target); }
+      });
+    }, { threshold:.15, rootMargin:'0px 0px -40px 0px' });
+  }
+  document.querySelectorAll('.read-article > p, .read-article > blockquote, .read-article > img, .read-article > figure, .pub-content > p').forEach(el=>{
+    if(!el.classList.contains('fade-scroll') && !el.classList.contains('in-view')){
+      el.classList.add('fade-scroll');
+      _fadeObserver.observe(el);
+    }
+  });
+}
+
+/* Turn any blockquote that stands alone into a pull-quote visually */
+function wirePullQuotes(){
+  document.querySelectorAll('.read-article blockquote').forEach(bq=>{
+    bq.classList.add('pull-quote');
+  });
+}
+
+/* ══════════════════════════════════════
+   LIGHTBOX GALLERY
+══════════════════════════════════════ */
+function wireLightbox(){
+  document.querySelectorAll('.read-article img, .pub-content img').forEach(img=>{
+    if(img.dataset.lbWired) return;
+    img.dataset.lbWired = '1';
+    img.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      document.getElementById('lightboxImg').src = img.src;
+      document.getElementById('lightboxBg').classList.add('open');
+    });
+  });
+}
+function closeLightbox(e){
+  if(e && e.target !== e.currentTarget && !e.target.classList.contains('lightbox-close')) return;
+  document.getElementById('lightboxBg').classList.remove('open');
+}
+
+/* ══════════════════════════════════════
+   PARALLAX HERO IMAGE
+══════════════════════════════════════ */
+function wireParallaxHero(){
+  const img = document.getElementById('readHeroImg');
+  if(!img) return;
+  img.classList.add('hero-zoom');
+  const hero = document.getElementById('readHero');
+  const onScroll = ()=>{
+    if(!document.getElementById('page-read')?.classList.contains('active')) return;
+    const rect = hero.getBoundingClientRect();
+    if(rect.bottom < 0) return;
+    img.style.transform = `translateY(${(window.scrollY*0.25).toFixed(1)}px)`;
+  };
+  window.addEventListener('scroll', onScroll, { passive:true });
+}
+
+/* ══════════════════════════════════════
+   LIKE BURST PARTICLES
+══════════════════════════════════════ */
+function burstHearts(anchorEl){
+  if(!anchorEl) return;
+  const rect = anchorEl.getBoundingClientRect();
+  for(let i=0;i<7;i++){
+    const p = document.createElement('span');
+    p.className = 'heart-particle';
+    p.textContent = '♥';
+    const angle = (Math.random()*Math.PI) + Math.PI; // upward spread
+    const dist = 26 + Math.random()*26;
+    p.style.setProperty('--dx', (Math.cos(angle)*dist).toFixed(1)+'px');
+    p.style.setProperty('--dy', (Math.sin(angle)*dist).toFixed(1)+'px');
+    p.style.left = (rect.left + rect.width/2) + 'px';
+    p.style.top  = (rect.top + rect.height/2) + 'px';
+    p.style.position = 'fixed';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 750);
+  }
+}
+
+/* ══════════════════════════════════════
+   CURSOR FOLLOWER + MAGNETIC BUTTONS (desktop)
+══════════════════════════════════════ */
+function wireCursorFX(){
+  if(window.matchMedia('(hover:none)').matches) return;
+  const cur = document.getElementById('cursorFollow');
+  let raf = null, tx=0, ty=0, cx=0, cy=0;
+  document.addEventListener('mousemove', (e)=>{
+    tx = e.clientX; ty = e.clientY;
+    if(!raf){
+      raf = requestAnimationFrame(function step(){
+        cx += (tx-cx)*0.25; cy += (ty-cy)*0.25;
+        cur.style.left = cx+'px'; cur.style.top = cy+'px';
+        raf = null;
+      });
+    }
+    const hoverTarget = e.target.closest('[data-cursor-label]');
+    if(hoverTarget){
+      cur.textContent = hoverTarget.dataset.cursorLabel || 'Read →';
+      cur.classList.add('show');
+    } else {
+      cur.classList.remove('show');
+    }
+  });
+
+  // Magnetic buttons
+  document.addEventListener('mousemove', (e)=>{
+    document.querySelectorAll('.btn, .nav-pill').forEach(btn=>{
+      const r = btn.getBoundingClientRect();
+      const dx = e.clientX - (r.left+r.width/2), dy = e.clientY - (r.top+r.height/2);
+      const dist = Math.hypot(dx,dy);
+      if(dist < 80){
+        const pull = (1 - dist/80) * 6;
+        btn.style.transform = `translate(${(dx/80*pull).toFixed(1)}px, ${(dy/80*pull).toFixed(1)}px)`;
+      } else {
+        btn.style.transform = '';
+      }
+    });
+  });
+}
+
+/* ══════════════════════════════════════
+   🖋 INK FLOW — organic ambient background
+   Slow-bleeding ink blooms, quasi-random
+   drift (no obvious loop), gentle scroll
+   reactivity, corner-anchored composition.
+══════════════════════════════════════ */
+const InkFlow = (() => {
+  let canvas, ctx, raf = null;
+  let W = 0, H = 0, DPR = 1;
+  let blobs = [];
+  let startTime = 0;
+  let lastFrameTime = 0;
+  let scrollImpulse = 0;
+  let lastScrollY = 0;
+  let running = false;
+
+  const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isMobile     = () => window.innerWidth < 700;
+
+  // Warm charcoal / graphite ink tones — reads as black ink on the
+  // near-black page, with the faintest whisper of Nocturne's gold.
+  const PALETTE = [
+    'rgba(255,247,235,ALPHA)',   // warm paper-lit graphite highlight
+    'rgba(220,200,170,ALPHA)',   // faint gold-ink sheen
+    'rgba(190,180,168,ALPHA)',   // cool charcoal
+  ];
+
+  function makeBlobs(){
+    // Anchors sit in the corners / edges — the centre of the page stays clear.
+    const anchors = [
+      { x:.06, y:.08 }, { x:.94, y:.1 },
+      { x:.08, y:.92 }, { x:.92, y:.9 },
+      { x:.02, y:.5  }, { x:.98, y:.55 },
+    ];
+    const list = [];
+    anchors.forEach((a, i) => {
+      const satellites = isMobile() ? 1 : (1 + (i % 2));
+      for(let s = 0; s <= satellites; s++){
+        list.push({
+          ax: a.x, ay: a.y,
+          // irrational-ish, mutually-incommensurate frequencies so the
+          // combined motion never resolves into a visible loop
+          f1: 0.00006 + Math.random()*0.00004,
+          f2: 0.00004 + Math.random()*0.00003,
+          f3: 0.00009 + Math.random()*0.00005,
+          p1: Math.random()*Math.PI*2,
+          p2: Math.random()*Math.PI*2,
+          p3: Math.random()*Math.PI*2,
+          drift: (0.05 + Math.random()*0.05) * (s === 0 ? 1 : 0.6),
+          baseR: (s === 0 ? 220 : 120) - Math.random()*40 + (isMobile()? -50:0),
+          rAmp: 30 + Math.random()*30,
+          rFreq: 0.00007 + Math.random()*0.00005,
+          rPhase: Math.random()*Math.PI*2,
+          color: PALETTE[(i+s) % PALETTE.length],
+          alpha: 0.05 + Math.random()*0.05, // keep within the ~5–12% envelope
+          entranceDelay: i * 260 + s * 140,
+        });
+      }
+    });
+    return list;
+  }
+
+  function resize(){
+    if(!canvas) return;
+    const scale = isMobile() ? 0.55 : 0.85; // render soft, upscale via CSS blur — cheap & fine since it's blurred anyway
+    DPR = Math.min(window.devicePixelRatio || 1, isMobile() ? 1.25 : 1.75);
+    W = Math.ceil(window.innerWidth * 1.24 * scale);
+    H = Math.ceil(window.innerHeight * 1.24 * scale);
+    canvas.width  = Math.ceil(W * DPR);
+    canvas.height = Math.ceil(H * DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+
+  function draw(now){
+    const t = now - startTime;
+    ctx.clearRect(0,0,W,H);
+
+    // scroll impulse decays back to 0 — a gentle nudge, not a chase
+    scrollImpulse *= 0.94;
+
+    blobs.forEach(b=>{
+      const entrance = Math.max(0, Math.min(1, (t - b.entranceDelay) / 3200));
+      const eased = 1 - Math.pow(1-entrance, 3); // ease-out cubic
+      if(entrance <= 0) return;
+
+      const x = b.ax*W
+        + Math.sin(t*b.f1 + b.p1) * b.drift * W
+        + Math.cos(t*b.f2 + b.p2) * b.drift * W * 0.55;
+      const y = b.ay*H
+        + Math.cos(t*b.f3 + b.p3) * b.drift * H * 0.6
+        + Math.sin(t*b.f1*0.8 + b.p2) * b.drift * H * 0.4;
+
+      const r = Math.max(10, (b.baseR + Math.sin(t*b.rFreq + b.rPhase)*b.rAmp + scrollImpulse) * eased);
+      const alpha = b.alpha * eased;
+
+      const g = ctx.createRadialGradient(x,y,0, x,y,r);
+      g.addColorStop(0,   b.color.replace('ALPHA', alpha.toFixed(3)));
+      g.addColorStop(0.55,b.color.replace('ALPHA', (alpha*0.45).toFixed(3)));
+      g.addColorStop(1,   b.color.replace('ALPHA', '0'));
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fill();
+    });
+  }
+
+  function loop(now){
+    if(!running) return;
+    const minInterval = isMobile() ? 1000/24 : 1000/60; // throttle on mobile for battery
+    if(now - lastFrameTime >= minInterval){
+      lastFrameTime = now;
+      draw(now);
+    }
+    raf = requestAnimationFrame(loop);
+  }
+
+  function start(){
+    if(running) return;
+    running = true;
+    lastFrameTime = 0;
+    raf = requestAnimationFrame(loop);
+  }
+  function stop(){
+    running = false;
+    if(raf) cancelAnimationFrame(raf);
+    raf = null;
+  }
+
+  function drawStaticFrame(){
+    // Reduced-motion: render one calm, settled frame — no animation loop at all.
+    startTime = 0;
+    draw(4000);
+  }
+
+  function onScroll(){
+    const y = window.scrollY || 0;
+    const delta = y - lastScrollY;
+    lastScrollY = y;
+    // a light disturbance, like ink diffusing slightly when the water moves —
+    // never a direct 1:1 follow
+    scrollImpulse += Math.max(-14, Math.min(14, delta * 0.35));
+  }
+
+  function init(){
+    canvas = document.getElementById('inkCanvas');
+    if(!canvas) return;
+    ctx = canvas.getContext('2d');
+    blobs = makeBlobs();
+    resize();
+    window.addEventListener('resize', ()=>{ resize(); }, { passive:true });
+    window.addEventListener('scroll', onScroll, { passive:true });
+
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.hidden) stop();
+      else if(!reduceMotion()) start();
+    });
+
+    requestAnimationFrame(()=> canvas.classList.add('show'));
+
+    if(reduceMotion()){
+      drawStaticFrame();
+    } else {
+      startTime = performance.now();
+      start();
+    }
+  }
+
+  return { init };
+})();
+
+/* ══════════════════════════════════════
+   AMBIENT PARTICLES
+══════════════════════════════════════ */
+function spawnBgParticles(){
+  const holder = document.getElementById('bgParticles');
+  if(!holder) return;
+  const n = 16;
+  for(let i=0;i<n;i++){
+    const p = document.createElement('div');
+    p.className = 'bgfx-particle';
+    const size = 1 + Math.random()*2.4;
+    p.style.width = size+'px'; p.style.height = size+'px';
+    p.style.left = (Math.random()*100)+'vw';
+    p.style.bottom = '-10px';
+    const dur = 18 + Math.random()*22;
+    p.style.animationDuration = dur+'s';
+    p.style.animationDelay = (-Math.random()*dur)+'s';
+    holder.appendChild(p);
+  }
+}
+
+/* ══════════════════════════════════════
+   ✦ ARCHIVE — LUXURY INTERACTION LAYER
+   Ink-bloom clicks + custom "luxe" dropdowns
+══════════════════════════════════════ */
+
+/* Ink bloom on pills / toolbar buttons — subtle, no splash */
+document.addEventListener('click', (e)=>{
+  const el = e.target.closest('.bt-tab, .tag-pill, .blog-toolbar .btn-ghost');
+  if(!el) return;
+  const rect = el.getBoundingClientRect();
+  const bloom = document.createElement('span');
+  bloom.className = 'ink-bloom';
+  const size = Math.max(rect.width, rect.height) * 1.9;
+  bloom.style.width  = size+'px';
+  bloom.style.height = size+'px';
+  bloom.style.left = (e.clientX - rect.left)+'px';
+  bloom.style.top  = (e.clientY - rect.top)+'px';
+  el.appendChild(bloom);
+  setTimeout(()=>bloom.remove(), 650);
+}, true);
+
+/* Turn a plain <select> into a glassy, gold-trimmed dropdown while the
+   original select stays in the DOM (hidden) so all existing filter logic
+   — populateBlogControls(), applyBlogFilters(), etc. — keeps working untouched. */
+function enhanceLuxeSelect(selectId){
+  const sel = document.getElementById(selectId);
+  if(!sel || sel.dataset.luxe) return;
+  sel.dataset.luxe = '1';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'luxe-select-wrap';
+  sel.parentNode.insertBefore(wrap, sel);
+  wrap.appendChild(sel);
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'luxe-select-trigger';
+  trigger.innerHTML = '<span class="lst-label"></span><span class="lst-arrow">▾</span>';
+  wrap.appendChild(trigger);
+
+  const panel = document.createElement('div');
+  panel.className = 'luxe-select-panel';
+  wrap.appendChild(panel);
+
+  function rebuildPanel(){
+    panel.innerHTML = Array.from(sel.options).map(o =>
+      `<div class="luxe-opt ${o.value===sel.value?'sel':''}" data-val="${esc(o.value)}">${esc(o.textContent)}</div>`
+    ).join('');
+  }
+  function refreshLabel(){
+    const opt = sel.options[sel.selectedIndex];
+    trigger.querySelector('.lst-label').textContent = opt ? opt.textContent : '';
+  }
+  refreshLabel();
+
+  trigger.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const willOpen = !wrap.classList.contains('open');
+    document.querySelectorAll('.luxe-select-wrap.open').forEach(w=>{ if(w!==wrap) w.classList.remove('open'); });
+    if(willOpen) rebuildPanel();
+    wrap.classList.toggle('open', willOpen);
+  });
+  panel.addEventListener('click', (e)=>{
+    const opt = e.target.closest('.luxe-opt');
+    if(!opt) return;
+    sel.value = opt.dataset.val;
+    wrap.classList.remove('open');
+    refreshLabel();
+    if(typeof sel.onchange === 'function') sel.onchange();
+  });
+  document.addEventListener('click', ()=> wrap.classList.remove('open'));
+
+  sel._luxeRefresh = refreshLabel; // hook used by syncLuxeTrigger()
+}
+function syncLuxeTrigger(sel){
+  if(sel && typeof sel._luxeRefresh === 'function') sel._luxeRefresh();
+}
+
+/* ══════════════════════════════════════
+   QUOTE OF THE DAY
+══════════════════════════════════════ */
+const NOCTURNE_QUOTES = [
+  { q:'We write to taste life twice, in the moment and in retrospect.', s:'Anaïs Nin' },
+  { q:'There is no greater agony than bearing an untold story inside you.', s:'Maya Angelou' },
+  { q:'The night is a world lit by itself.', s:'Antoine de Saint-Exupéry' },
+  { q:'Fill your paper with the breathings of your heart.', s:'William Wordsworth' },
+  { q:'A word after a word after a word is power.', s:'Margaret Atwood' },
+  { q:'What is a story if not a lantern carried into the dark?', s:'Nocturne' },
+  { q:'You can make anything by writing.', s:'C.S. Lewis' },
+];
+function renderQuoteOfDay(){
+  const el = document.getElementById('quoteOfDay');
+  if(!el) return;
+  const dayIdx = Math.floor(Date.now()/86400000) % NOCTURNE_QUOTES.length;
+  const pick = NOCTURNE_QUOTES[dayIdx];
+  el.innerHTML = `“${esc(pick.q)}”<span class="qod-src">— ${esc(pick.s)}</span>`;
+}
+
+/* ══════════════════════════════════════
+   BLOG VIEW SWITCHER — list / timeline / masonry
+══════════════════════════════════════ */
+let _blogView = 'list'; // 'list' | 'timeline' | 'masonry'
+function _applyBlogView(){
+  const list = document.getElementById('postsList');
+  const tl   = document.getElementById('archiveTimeline');
+  const mg   = document.getElementById('masonryGallery');
+  const tBtn = document.getElementById('timelineToggleBtn');
+  const mBtn = document.getElementById('masonryToggleBtn');
+  list.style.display = _blogView==='list' ? '' : 'none';
+  tl.style.display   = _blogView==='timeline' ? '' : 'none';
+  mg.style.display   = _blogView==='masonry' ? '' : 'none';
+  if(tBtn) tBtn.innerHTML = _blogView==='timeline' ? '<span>☰</span> List view' : '<span>📅</span> Timeline';
+  if(mBtn) mBtn.innerHTML = _blogView==='masonry'  ? '<span>☰</span> List view' : '<span>🎞</span> Gallery';
+  if(_blogView==='timeline') renderArchiveTimeline();
+  if(_blogView==='masonry')  renderMasonryGallery();
+}
+function toggleTimelineView(){
+  _blogView = (_blogView==='timeline') ? 'list' : 'timeline';
+  _applyBlogView();
+}
+function toggleMasonryView(){
+  _blogView = (_blogView==='masonry') ? 'list' : 'masonry';
+  _applyBlogView();
+}
+function renderArchiveTimeline(){
+  const posts = loadPosts().slice().sort((a,b)=>postTs(b)-postTs(a));
+  const tl = document.getElementById('archiveTimeline');
+  if(!posts.length){ tl.innerHTML = '<div class="empty-state">No posts yet</div>'; return; }
+  tl.innerHTML = posts.map(p=>`
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-date">${esc(p.date||'')}</div>
+      <div class="timeline-title" onclick="openPost(${p.id},'blog')">${esc(p.title)}</div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════
+   🎞 MASONRY GALLERY (Pinterest-style)
+══════════════════════════════════════ */
+function renderMasonryGallery(){
+  const posts = loadPosts();
+  const mg = document.getElementById('masonryGallery');
+  const withImages = posts.filter(p=>{
+    const bodyImg = p.body && p.body.match(/<img[^>]+src="([^"]+)"/);
+    return p.thumbnail || bodyImg;
+  });
+  if(!withImages.length){ mg.innerHTML = '<div class="empty-state">No images yet — posts with a cover or inline image will appear here</div>'; return; }
+  mg.innerHTML = withImages.map(p=>{
+    const bodyImg = p.body && p.body.match(/<img[^>]+src="([^"]+)"/);
+    const src = p.thumbnail || (bodyImg ? bodyImg[1] : '');
+    return `
+    <div class="masonry-item" onclick="openPost(${p.id},'blog')" data-cursor-label="Read →">
+      <img src="${src}" loading="lazy" alt="${esc(p.title)}">
+      <div class="mi-overlay">
+        <div>
+          <span class="mi-tag">${esc(p.tag||'Essay')}</span>
+          <div class="mi-title">${esc(p.title)}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   🌐 DOME GALLERY (Vision-Pro style)
+══════════════════════════════════════ */
+let _domeMouseHandler = null;
+function openDomeGallery(){
+  const posts = loadPosts();
+  const withImages = posts.filter(p=>{
+    const bodyImg = p.body && p.body.match(/<img[^>]+src="([^"]+)"/);
+    return p.thumbnail || bodyImg;
+  });
+  if(!withImages.length){ toast('Add a few images to your posts first'); return; }
+
+  const scene = document.getElementById('domeScene');
+  const n = withImages.length;
+  const radius = 340;
+  scene.innerHTML = '<div class="dome-center">YOU</div>';
+  const domeItems = [];
+  withImages.forEach((p,i)=>{
+    const bodyImg = p.body && p.body.match(/<img[^>]+src="([^"]+)"/);
+    const src = p.thumbnail || (bodyImg ? bodyImg[1] : '');
+    // distribute items around a sphere-ish dome using golden-angle spiral
+    const t = i / Math.max(1,n-1);
+    const theta = i * 137.5; // golden angle in degrees
+    const phi = 20 + t * 100; // vertical spread, degrees from top
+    const el = document.createElement('div');
+    el.className = 'dome-item';
+    const baseTransform = `rotateY(${theta}deg) rotateX(${phi-70}deg) translateZ(${radius}px)`;
+    el.dataset.baseTransform = baseTransform;
+    el.style.transform = baseTransform;
+    el.dataset.cursorLabel = 'Read →';
+    el.onclick = ()=>{ closeDomeGallery(); openPost(p.id,'blog'); };
+    el.innerHTML = `<img src="${src}" alt="${esc(p.title)}" loading="lazy">`;
+    scene.appendChild(el);
+    domeItems.push(el);
+  });
+
+  // 🪄 Hover-expand: the hovered card grows to ~2x and pops forward,
+  // every other card shrinks and fades slightly to make room for it.
+  domeItems.forEach(el=>{
+    el.addEventListener('mouseenter', ()=>{
+      domeItems.forEach(other=>{
+        if(other === el){
+          other.style.zIndex = 20;
+          other.style.transform = `${other.dataset.baseTransform} scale(2) translateZ(60px)`;
+          other.style.boxShadow = '0 30px 70px rgba(0,0,0,.65)';
+        } else {
+          other.style.zIndex = 1;
+          other.style.transform = `${other.dataset.baseTransform} scale(.62)`;
+          other.style.opacity = '.45';
+        }
+      });
+    });
+    el.addEventListener('mouseleave', ()=>{
+      domeItems.forEach(other=>{
+        other.style.zIndex = '';
+        other.style.transform = other.dataset.baseTransform;
+        other.style.opacity = '';
+        other.style.boxShadow = '';
+      });
+    });
+  });
+
+  document.getElementById('domeModalBg').classList.add('open');
+
+  let rotY = 0, rotX = -6;
+  scene.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  _domeMouseHandler = (e)=>{
+    const stage = document.getElementById('domeStage');
+    const r = stage.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    rotY = px * 70;
+    rotX = -6 - py * 40;
+    scene.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  };
+  document.getElementById('domeStage').addEventListener('mousemove', _domeMouseHandler);
+}
+function closeDomeGallery(){
+  document.getElementById('domeModalBg').classList.remove('open');
+  const stage = document.getElementById('domeStage');
+  if(_domeMouseHandler) stage.removeEventListener('mousemove', _domeMouseHandler);
+  _domeMouseHandler = null;
+}
+
+
+/* ══════════════════════════════════════
+   🎡 INFINITE TRENDING STRIP (Netflix-style)
+══════════════════════════════════════ */
+function renderTrendingStrip(excludeId){
+  const wrap = document.getElementById('trendingStripWrap');
+  const track = document.getElementById('trendingTrack');
+  const posts = loadPosts().filter(p=>p.id!==excludeId);
+  if(posts.length < 3){ wrap.style.display = 'none'; return; }
+
+  const engMapAll = getEng(posts[0].id);
+  const engOf = p => engMapAll[String(p.id)] || {likes:0,views:0};
+  const ranked = posts.slice().sort((a,b)=> (engOf(b).likes*2+engOf(b).views) - (engOf(a).likes*2+engOf(a).views)).slice(0,10);
+  if(!ranked.length){ wrap.style.display = 'none'; return; }
+
+  const cardHTML = (p)=>{
+    const bodyImg = p.body && p.body.match(/<img[^>]+src="([^"]+)"/);
+    const src = p.thumbnail || (bodyImg ? bodyImg[1] : '');
+    const thumb = src ? `<img src="${src}" loading="lazy" alt="${esc(p.title)}">` : '';
+    return `
+    <div class="trending-card" onclick="openPost(${p.id},'blog')" data-cursor-label="Read →">
+      <div class="trending-card-thumb">${thumb}</div>
+      <div class="trending-card-body">
+        <div class="trending-card-tag">${esc(p.tag||'Essay')}</div>
+        <div class="trending-card-title">${esc(p.title)}</div>
+      </div>
+    </div>`;
+  };
+  // Duplicate the list so the CSS translateX(-50%) loop is seamless
+  const html = ranked.map(cardHTML).join('') + ranked.map(cardHTML).join('');
+  track.innerHTML = html;
+  wrap.style.display = '';
+}
+
+/* ══════════════════════════════════════
+   SEARCH HIGHLIGHT HELPER
+══════════════════════════════════════ */
+function highlightTerm(text, term){
+  if(!term) return esc(text);
+  const escaped = esc(text);
+  const safeTerm = term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  try {
+    return escaped.replace(new RegExp('('+safeTerm+')','ig'), '<mark class="search-hit">$1</mark>');
+  } catch(_) { return escaped; }
+}
+
+/* ══════════════════════════════════════
+   PAGE-CHANGE HOOKS — wire new effects whenever content renders
+══════════════════════════════════════ */
+const _origOpenPost = openPost;
+openPost = function(id, fromPage){
+  _origOpenPost(id, fromPage);
+  requestAnimationFrame(()=>{
+    splitText(document.getElementById('readTitle'));
+    wirePullQuotes();
+    wireScrollFades();
+    wireLightbox();
+    wireParallaxHero();
+    onScrollProgress();
+    renderTrendingStrip(Number(id));
+  });
+};
+
+const _origGoPage = goPage;
+goPage = function(id){
+  _origGoPage(id);
+  if(id === 'home'){
+    requestAnimationFrame(()=> splitText(document.querySelector('.hero-title')));
+  }
+  if(id === 'about'){ renderQuoteOfDay(); }
+  if(id === 'blog'){ _blogView = 'list'; _applyBlogView(); }
+};
+
+const _origRenderHomeGrid = renderHomeGrid;
+renderHomeGrid = function(){
+  _origRenderHomeGrid();
+  wireLightbox();
+};
+
 /* ── Bootstrap — runs last, after every function is defined ── */
 (async () => {
-  if (!ADMIN_HASH) {
-    ADMIN_HASH = await sha256('akshaya123' + SALT);
-    localStorage.setItem('nct_ahash', ADMIN_HASH);
-  }
+  runIntroReveal();
+  InkFlow.init();
+  spawnBgParticles();
+  wireCursorFX();
+  enhanceLuxeSelect('blogCategory');
+  enhanceLuxeSelect('blogArchive');
+  // NOTE: no default admin password is set here anymore — see doLogin().
+  // The admin account is "claimed" the first time someone signs in with
+  // ADMIN_EMAIL on a given device; whatever password they use becomes the
+  // admin password for that device. This avoids shipping a fixed password
+  // in the page source that anyone could read via View Source.
   initSession();  // restore curUser from sessionStorage
   await initDB(); // fetch from Firestore, render for everyone
+  openFromCurrentURL(); // e.g. a shared /post/123-my-title link — show the article first, not the home grid
+  requestAnimationFrame(()=>{
+    splitText(document.querySelector('.hero-title'));
+    onScrollProgress();
+  });
 })();
 </script>
 <!-- setup banner shown if needed -->

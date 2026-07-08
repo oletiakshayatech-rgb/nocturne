@@ -10,3 +10,11 @@
   # main build log). Marking it external tells esbuild to leave it alone
   # and resolve it from node_modules at runtime instead of bundling it.
   external_node_modules = ["@netlify/blobs"]
+
+# SPA fallback: routes like /post/123-my-title only exist client-side.
+# Without this, refreshing a shared post link (or opening it fresh) 404s
+# instead of loading the app and letting JS show the article.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
