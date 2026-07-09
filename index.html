@@ -2551,13 +2551,10 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
 
 <!-- ════════════════ ADMIN DASHBOARD PAGE ════════════════ -->
 <!--
-  DATABASE INTEGRATION NOTE:
-  This page uses localStorage for mock data. To connect a real backend:
-  - Replace loadUsers() / saveUsers() with Supabase/Firebase API calls.
-  - Each toggleAccess(), approveUser(), denyUser() call should fire an
-    authenticated API request to update the user's record server-side.
-  - renderAdminDashboard() should fetch the latest snapshot on each visit.
-  See comments throughout the JS section for specific integration points.
+  BACKEND: user data is served by netlify/functions/admin.js, which is
+  the only place password hashes ever exist. Every action here
+  (toggleAccess, approveUser, denyUser, renderAdminDashboard) sends the
+  signed-in admin's session token and admin.js re-checks it server-side.
 -->
 <div class="page" id="page-admin">
   <div class="adm-header">
@@ -2693,19 +2690,13 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
 ════════════════════════════════════════════ -->
 <script>
 /* ══════════════════════════════════════
-   CRYPTO HELPERS
+   DATA LAYER
+   Password hashing/verification and session-token signing now happen
+   entirely server-side (admin.js / save.js) using ADMIN_KEY, a secret
+   that only exists in Netlify environment variables. The client never
+   computes or stores a password hash.
 ══════════════════════════════════════ */
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-/* ══════════════════════════════════════
-   DATA LAYER  (localStorage)
-══════════════════════════════════════ */
-const SALT = 'nct_K9x$2026';
 const ADMIN_EMAIL = 'oletiakshayablog@gmail.com';
-let ADMIN_HASH = localStorage.getItem('nct_ahash') || '';
 let curUser = null; // set by initSession() from sessionStorage
 
 // Bootstrap runs at end of script after all functions are defined
@@ -2726,7 +2717,18 @@ let curUser = null; // set by initSession() from sessionStorage
    5. Paste both below
 ══════════════════════════════════════════════════════════════ */
 const CONFIGURED = true;
-const DB_ENDPOINT = '/.netlify/functions/db';
+const DB_ENDPOINT    = '/.netlify/functions/db';    // public: GET { posts, eng }
+const ADMIN_ENDPOINT = '/.netlify/functions/admin'; // private: login/signup/user management
+const SAVE_ENDPOINT  = '/.netlify/functions/save';  // private (posts) + public (engagement)
+
+/* Session token issued by admin.js on login. Kept in sessionStorage
+   alongside curUser so a page reload doesn't force a re-login. Never
+   contains a password or password hash — just a short-lived signed
+   claim of who's signed in and what role they have. */
+let AUTH_TOKEN = sessionStorage.getItem('nct_token') || null;
+function authHeaders() {
+  return AUTH_TOKEN ? { 'Authorization': 'Bearer ' + AUTH_TOKEN } : {};
+}
 
 async function fsGetAll() {
   try {
@@ -2734,28 +2736,45 @@ async function fsGetAll() {
     if (!r.ok) throw new Error(`DB read ${r.status}`);
     const d = await r.json();
     console.log(`Cloud read OK: ${(d.posts||[]).length} posts`);
-    return { posts: d.posts||[], eng: d.eng||{}, users: d.users||[] };
+    // users are never returned by the public db endpoint anymore —
+    // loadUsers()/saveUsers() talk to admin.js instead, only when an
+    // admin is signed in and viewing the dashboard.
+    return { posts: d.posts||[], eng: d.eng||{} };
   } catch(e) {
     console.error('Cloud read error:', e.message);
     throw e;
   }
 }
 
-async function fsSetAll(data) {
-  const postsForCloud = await stripThumbnails(data.posts || []);
-  const payload = { posts: postsForCloud, eng: data.eng||{}, users: data.users||[] };
-  const r = await fetch(DB_ENDPOINT, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+/* Posts (create/edit/delete) require an admin or approved-writer
+   session token and go to save.js's `type:'posts'` action. */
+async function fsSetPosts(posts) {
+  const postsForCloud = await stripThumbnails(posts || []);
+  const r = await fetch(SAVE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ type: 'posts', posts: postsForCloud }),
   });
-  if (!r.ok) { const t=await r.text(); throw new Error(`DB write ${r.status}: ${t}`); }
+  if (!r.ok) { const t=await r.text(); throw new Error(`Post save ${r.status}: ${t}`); }
   const result = await r.json();
   console.log(`Cloud write OK: ${result.posts} posts saved`);
 }
+
+/* Engagement (likes/views/shares/comments) stays public — guests
+   interact without an account, same as before — but now goes through
+   save.js's `type:'engagement'` action instead of the public db.js
+   PUT (which no longer exists). */
+async function fsSetEngagement(eng) {
+  const r = await fetch(SAVE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'engagement', eng: eng || {} }),
+  });
+  if (!r.ok) { const t=await r.text(); throw new Error(`Engagement save ${r.status}: ${t}`); }
+}
 /* ── In-memory cache ── */
 let _cache = null;
-const EMPTY_DB = { posts:[], eng:{}, users:[] };
+const EMPTY_DB = { posts:[], eng:{} }; // users no longer live in the public cache
 
 /* ── Strip/compress thumbnails before cloud write (Firestore has a 1MB doc limit) ── */
 async function stripThumbnails(posts) {
@@ -2833,7 +2852,6 @@ function loadFromLocal() {
   return {
     posts: JSON.parse(localStorage.getItem('nct_posts') || '[]'),
     eng:   JSON.parse(localStorage.getItem('nct_eng')   || '{}'),
-    users: JSON.parse(localStorage.getItem('nct_users') || '[]'),
   };
 }
 
@@ -2841,7 +2859,6 @@ function saveToLocal(db) {
   try {
     localStorage.setItem('nct_posts', JSON.stringify(db.posts));
     localStorage.setItem('nct_eng',   JSON.stringify(db.eng));
-    localStorage.setItem('nct_users', JSON.stringify(db.users));
   } catch(e) {}
 }
 
@@ -2859,11 +2876,11 @@ const BACKUP_KEY = 'nct_backup';
 
 /* Snapshot the last-known-good database before every cloud write, so a bad
    write (or a bug) can always be recovered from. This is separate from the
-   live nct_posts/nct_eng/nct_users keys, which get overwritten on every save. */
+   live nct_posts/nct_eng keys, which get overwritten on every save. */
 function saveBackupSnapshot(db) {
   try {
     localStorage.setItem(BACKUP_KEY, JSON.stringify({
-      posts: db.posts || [], eng: db.eng || {}, users: db.users || [],
+      posts: db.posts || [], eng: db.eng || {},
       _backupAt: Date.now()
     }));
   } catch(e) {}
@@ -2875,7 +2892,10 @@ function readBackupSnapshot() {
   } catch(e) { return null; }
 }
 
-/* Immediate write — used after publish/delete so data is never lost on reload */
+/* Immediate POSTS write — used after publish/edit/delete/toggle so data
+   is never lost on reload. Requires curUser to be admin/approved; every
+   call site already checks that before calling this, and save.js
+   re-checks the session token server-side regardless. */
 async function writeNow() {
   if (!_cache) return;
   clearTimeout(_writeTimer); // cancel any pending debounced write
@@ -2894,7 +2914,7 @@ async function writeNow() {
     showSaveIndicator('⚠ Reconnecting…');
     try {
       const db = await fsGetAll();
-      _cache = { posts: mergeThumbnails(db.posts || []), eng: db.eng || {}, users: db.users || [] };
+      _cache = { posts: mergeThumbnails(db.posts || []), eng: db.eng || {} };
       saveToLocal(_cache);
       _cloudSynced = true;
       renderPosts(); renderHomeGrid(); updateNav();
@@ -2910,14 +2930,26 @@ async function writeNow() {
     showSaveIndicator('Saving…');
     // Keep a recoverable copy of the last-known-good state before overwriting it.
     saveBackupSnapshot(_cache);
-    await fsSetAll({ posts: _cache.posts, eng: _cache.eng, users: _cache.users });
+    await fsSetPosts(_cache.posts);
     _cloudSynced = true; // this write is now the confirmed cloud state
     showSaveIndicator('Saved ✓');
     setTimeout(()=>showSaveIndicator(''), 2000);
   } catch(e) {
-    console.error('Firestore write failed:', e);
+    console.error('Post save failed:', e);
     showSaveIndicator('⚠ Save failed — check console');
     setTimeout(()=>showSaveIndicator(''), 4000);
+  }
+}
+
+/* Debounced ENGAGEMENT write — likes/views/shares/comments, public,
+   no auth required. Kept separate from writeNow() so a guest liking a
+   post never triggers a (writer-only) posts write. */
+async function writeEngagementNow() {
+  if (!_cache) return;
+  try {
+    await fsSetEngagement(_cache.eng);
+  } catch(e) {
+    console.error('Engagement save failed:', e);
   }
 }
 
@@ -2925,7 +2957,7 @@ async function writeNow() {
 function _scheduleWrite() {
   if (!_initDone) return; // never write during the initial Firestore read
   clearTimeout(_writeTimer);
-  _writeTimer = setTimeout(()=>writeNow(), 1500);
+  _writeTimer = setTimeout(()=>writeEngagementNow(), 1500);
 }
 
 function showSaveIndicator(msg) {
@@ -2938,7 +2970,6 @@ function showSaveIndicator(msg) {
 /* ── Public sync API ── */
 function loadPosts()  { return (_cache||EMPTY_DB).posts || []; }
 function loadEng()    { return (_cache||EMPTY_DB).eng   || {}; }
-function loadUsers()  { return (_cache||EMPTY_DB).users || []; }
 
 function savePosts(posts) {
   if (!_cache) _cache = {...EMPTY_DB};
@@ -2952,11 +2983,36 @@ function saveEng(eng) {
   try { localStorage.setItem('nct_eng', JSON.stringify(eng)); } catch(e){}
   _scheduleWrite();
 }
-function saveUsers(users) {
-  if (!_cache) _cache = {...EMPTY_DB};
-  _cache.users = users; _dirty = true;
-  try { localStorage.setItem('nct_users', JSON.stringify(users)); } catch(e){}
-  _scheduleWrite();
+
+/* ── Users now live only in admin.js — never in the public cache/db.
+   loadUsersRemote() is async and only ever called by the admin
+   dashboard, which is only reachable by a signed-in admin. ── */
+async function loadUsersRemote() {
+  try {
+    const r = await fetch(ADMIN_ENDPOINT, { headers: { ...authHeaders() } });
+    if (!r.ok) throw new Error(`Users read ${r.status}`);
+    const d = await r.json();
+    return d.users || [];
+  } catch(e) {
+    console.error('Failed to load users:', e.message);
+    return [];
+  }
+}
+async function adminUserAction(action, email, extra) {
+  try {
+    const r = await fetch(ADMIN_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ action, email, ...extra }),
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.error || `Request failed (${r.status})`);
+    return d;
+  } catch(e) {
+    console.error(`admin ${action} failed:`, e.message);
+    toast(e.message || 'Action failed');
+    return null;
+  }
 }
 
 function getEng(id) {
@@ -2982,11 +3038,13 @@ function initSession() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      if (parsed && parsed.role && parsed.status !== 'denied' && parsed.role !== 'none') {
+      if (parsed && parsed.role && parsed.status !== 'denied' && parsed.role !== 'none' && AUTH_TOKEN) {
         curUser = parsed;
       } else {
         sessionStorage.removeItem('nct_sess');
+        sessionStorage.removeItem('nct_token');
         curUser = null;
+        AUTH_TOKEN = null;
       }
     } catch(e) {
       sessionStorage.removeItem('nct_sess');
@@ -3024,7 +3082,7 @@ async function initDBCloudSync() {
         const db = await fsGetAll();
         if (db) {
           const mergedPosts = mergeThumbnails(db.posts || []);
-          _cache = { posts: mergedPosts, eng: db.eng||{}, users: db.users||[] };
+          _cache = { posts: mergedPosts, eng: db.eng||{} };
           saveToLocal(_cache);
           clearTimeout(_writeTimer);
           _dirty = false;
@@ -3067,18 +3125,22 @@ function updateNav() {
   const note = document.getElementById('readOnlyNote');
   if (note) note.style.display = (!curUser || (!canWrite && curUser.role !== 'pending')) ? '' : 'none';
 
-  // Refresh pending badge on the Dashboard nav link
-  if (admin) {
-    const pendingCount = loadUsers().filter(u => u.status === 'pending').length;
-    const badge = document.getElementById('navAdminBadge');
-    if (badge) badge.style.display = pendingCount > 0 ? '' : 'none';
-  }
+  // Refresh pending badge on the Dashboard nav link (fire-and-forget —
+  // users now live behind admin.js, not the local cache).
+  if (admin) refreshAdminBadge();
 
   if (curUser) {
     const initials = (curUser.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     document.getElementById('navAv').textContent = initials;
     document.getElementById('navUname').textContent = curUser.name || curUser.email;
   }
+}
+
+async function refreshAdminBadge() {
+  const users = await loadUsersRemote();
+  const pendingCount = users.filter(u => u.status === 'pending').length;
+  const badge = document.getElementById('navAdminBadge');
+  if (badge) badge.style.display = pendingCount > 0 ? '' : 'none';
 }
 
 /* ══════════════════════════════════════
@@ -3119,61 +3181,42 @@ async function doLogin() {
 
   if (!email || !pass) { err.textContent='Fill in both fields.'; err.classList.add('show'); return; }
 
-  const h = await sha256(pass + SALT);
-
-  // Admin check
-  if (email === ADMIN_EMAIL) {
-    if (!ADMIN_HASH) {
-      // First sign-in on this device: no admin password has been set yet.
-      // Whatever the person enters here becomes the admin password —
-      // this replaces the old approach of shipping a fixed default
-      // password inside the page source, which anyone could read via
-      // View Source. Require a reasonable length so it's not trivial.
-      if (pass.length < 8) {
-        err.textContent = 'First sign-in: choose an admin password (8+ characters).';
-        err.classList.add('show');
-        return;
-      }
-      ADMIN_HASH = h;
-      localStorage.setItem('nct_ahash', ADMIN_HASH);
-      curUser = { email: ADMIN_EMAIL, name:'Akshaya', role:'admin', hash:h };
-      sessionStorage.setItem('nct_sess', JSON.stringify(curUser));
-      closeAuth(); updateNav(); renderPosts();
-      toast('Admin password set — you\'re signed in. Remember this password!');
+  // Login (and admin bootstrap) now happen entirely server-side in
+  // admin.js — the password is sent over HTTPS and hashed there;
+  // the client never computes or stores a password hash itself.
+  let resp;
+  try {
+    const r = await fetch(ADMIN_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email, password: pass }),
+    });
+    resp = await r.json().catch(()=>({}));
+    if (!r.ok) {
+      err.textContent = resp.error || 'Incorrect email or password.';
+      err.classList.add('show');
+      document.getElementById('liPass').value = '';
       return;
     }
-    if (h === ADMIN_HASH) {
-      curUser = { email: ADMIN_EMAIL, name:'Akshaya', role:'admin', hash:h };
-      sessionStorage.setItem('nct_sess', JSON.stringify(curUser));
-      closeAuth(); updateNav(); renderPosts();
-      toast('Signed in as admin'); return;
-    }
-    err.textContent='Incorrect email or password.'; err.classList.add('show');
-    document.getElementById('liPass').value=''; return;
-  }
-
-  // User lookup
-  const users = loadUsers();
-  const user  = users.find(u => u.email === email);
-  if (!user || user.hash !== h) {
-    err.textContent='Incorrect email or password.'; err.classList.add('show');
-    document.getElementById('liPass').value=''; return;
-  }
-  if (user.status === 'pending') {
-    err.textContent='Your account is awaiting admin approval.'; err.classList.add('show'); return;
-  }
-  if (user.status === 'denied') {
-    // Silently sign out — no need to show an Access Denied page
-    sessionStorage.removeItem('nct_sess');
-    curUser = null;
-    closeAuth();
-    toast('Sign in not available.');
+  } catch(e) {
+    err.textContent = 'Could not reach the server. Try again.';
+    err.classList.add('show');
     return;
   }
-  curUser = { email:user.email, name:user.name, role: user.status==='approved'?'approved':'reader', hash:h };
+
+  AUTH_TOKEN = resp.token;
+  sessionStorage.setItem('nct_token', AUTH_TOKEN);
+  curUser = { email: resp.email || email, name: resp.name, role: resp.role };
   sessionStorage.setItem('nct_sess', JSON.stringify(curUser));
   closeAuth(); updateNav(); renderPosts();
-  toast('Welcome back, '+user.name+'!');
+
+  if (resp.bootstrapped) {
+    toast('Admin password set — you\'re signed in. Remember this password!');
+  } else if (resp.role === 'admin') {
+    toast('Signed in as admin');
+  } else {
+    toast('Welcome back, ' + (curUser.name || curUser.email) + '!');
+  }
 }
 
 async function doSignup() {
@@ -3188,16 +3231,29 @@ async function doSignup() {
   if (!email) { err.textContent='Enter a valid email.'; err.classList.add('show'); return; }
   if (pass.length < 6) { err.textContent='Password must be at least 6 characters.'; err.classList.add('show'); return; }
 
-  if (email === ADMIN_EMAIL) { err.textContent='That email is reserved.'; err.classList.add('show'); return; }
+  // Account creation (and password hashing) happens server-side —
+  // save.js/admin.js never trust a client-supplied hash.
+  let resp;
+  try {
+    const r = await fetch(ADMIN_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'signup', name, email, password: pass }),
+    });
+    resp = await r.json().catch(()=>({}));
+    if (!r.ok) {
+      err.textContent = resp.error || 'Could not create your account.';
+      err.classList.add('show');
+      return;
+    }
+  } catch(e) {
+    err.textContent = 'Could not reach the server. Try again.';
+    err.classList.add('show');
+    return;
+  }
 
-  const users = loadUsers();
-  if (users.find(u=>u.email===email)) { err.textContent='An account with that email already exists.'; err.classList.add('show'); return; }
-
-  const h = await sha256(pass + SALT);
-  users.push({ email, name, hash:h, status:'pending', createdAt: new Date().toISOString() });
-  saveUsers(users);
-
-  // Simulate email notification (console + toast)
+  // Simulate email notification (console + toast) — signup itself already
+  // succeeded server-side; this is just a local UI nicety.
   console.log(`[Nocturne] New writer request: ${name} <${email}> — admin notified at ${ADMIN_EMAIL}`);
   simulateAdminEmail(name, email);
 
@@ -3213,7 +3269,9 @@ function simulateAdminEmail(name, email) {
 
 function doLogout() {
   curUser = null;
+  AUTH_TOKEN = null;
   sessionStorage.removeItem('nct_sess');
+  sessionStorage.removeItem('nct_token');
   cancelEdit();
   updateNav();
   renderPosts();
@@ -3223,21 +3281,10 @@ function doLogout() {
 /* ══════════════════════════════════════
    ADMIN DASHBOARD
    ─────────────────────────────────────
-   MOCK DATA: All reads/writes use localStorage via loadUsers()/saveUsers().
-
-   TO CONNECT A REAL DATABASE (Supabase example):
-   ─────────────────────────────────────────────────
-   import { createClient } from '@supabase/supabase-js'
-   const supabase = createClient(YOUR_URL, YOUR_ANON_KEY)
-
-   Replace loadUsers()  → const { data } = await supabase.from('users').select('*')
-   Replace saveUsers()  → await supabase.from('users').upsert(updatedRow)
-   Replace approveUser → await supabase.from('users').update({status:'approved'}).eq('email', email)
-   Replace denyUser    → await supabase.from('users').update({status:'denied'}).eq('email', email)
-
-   For Firebase Firestore:
-   Replace loadUsers()  → getDocs(collection(db, 'users'))
-   Replace saveUsers()  → updateDoc(doc(db, 'users', userId), { status: '...' })
+   Users live entirely behind admin.js now. renderAdminDashboard() is
+   async and calls loadUsersRemote(), which sends the admin's session
+   token in the Authorization header; admin.js verifies that token and
+   never returns password hashes.
 ══════════════════════════════════════ */
 
 let _admFilter = 'all'; // current filter: 'all' | 'approved' | 'denied' | 'pending'
@@ -3249,13 +3296,8 @@ function setFilter(f, btn) {
   renderAdminDashboard();
 }
 
-function renderAdminDashboard() {
-  /* ── DATABASE INTEGRATION POINT ──────────────────────────────────────
-     Replace loadUsers() with a real API call, e.g.:
-       const users = await fetchUsersFromDatabase();
-     Make this function async and await the call accordingly.
-  ─────────────────────────────────────────────────────────────────────── */
-  const allUsers = loadUsers();
+async function renderAdminDashboard() {
+  const allUsers = await loadUsersRemote();
 
   // Update stat counters
   document.getElementById('statTotal').textContent   = allUsers.length;
@@ -3319,34 +3361,23 @@ function renderAdminDashboard() {
 }
 
 /* ── TOGGLE ACCESS (Revoke / Grant) ──────────────────────────────────────
-   This is the core permission action. After updating localStorage,
-   you'd fire a real DB call:
-
-   Supabase:  await supabase.from('users').update({ status: newStatus }).eq('email', email)
-   Firebase:  await updateDoc(doc(db, 'users', uid), { status: newStatus })
-
+   Persists via admin.js's `toggle` action (admin token required — the
+   server re-checks this, it doesn't just trust the button being shown).
    If the user is currently logged in (curUser.email === email), they
    are immediately redirected to the Access Denied page.
 ──────────────────────────────────────────────────────────────────────── */
-function toggleAccess(email, action) {
-  const newStatus = action === 'revoke' ? 'denied' : 'approved';
-  const users = loadUsers();
-  const u = users.find(x => x.email === email);
-  if (!u) return;
-
-  u.status = newStatus;
-
-  /* ── DATABASE INTEGRATION POINT ──────────────────────────────────────
-     Call your backend here to persist the change, e.g.:
-       await updateUserStatus(email, newStatus);
-  ─────────────────────────────────────────────────────────────────────── */
-  saveUsers(users);
+async function toggleAccess(email, action) {
+  const grant = action !== 'revoke';
+  const result = await adminUserAction('toggle', email, { grant });
+  if (!result) return;
 
   // If this user is currently signed in, enforce lockout immediately
   if (curUser && curUser.email === email) {
-    if (newStatus === 'denied') {
+    if (!grant) {
       curUser = null;
+      AUTH_TOKEN = null;
       sessionStorage.removeItem('nct_sess');
+      sessionStorage.removeItem('nct_token');
       updateNav();
       renderPosts();
       goPage('denied');
@@ -3356,35 +3387,25 @@ function toggleAccess(email, action) {
     }
   }
 
-  const label = action === 'revoke' ? 'Access revoked for' : 'Access granted to';
-  toast(`${label} ${u.name}`);
+  const label = grant ? 'Access granted to' : 'Access revoked for';
+  toast(`${label} ${email}`);
   renderAdminDashboard();
   renderPosts();
   updateNav();
 }
 
-function approveUser(email) {
-  /* ── DATABASE INTEGRATION POINT ──────────────────────────────────────
-     Replace or supplement saveUsers() with:
-       await supabase.from('users').update({ status: 'approved' }).eq('email', email)
-  ─────────────────────────────────────────────────────────────────────── */
-  const users = loadUsers();
-  const u = users.find(x => x.email === email);
-  if (u) { u.status = 'approved'; saveUsers(users); }
+async function approveUser(email) {
+  const result = await adminUserAction('approve', email);
+  if (!result) return;
   renderAdminDashboard(); updateNav(); renderPosts();
-  toast(`${u?.name || email} approved`);
+  toast(`${email} approved`);
 }
 
-function denyUser(email) {
-  /* ── DATABASE INTEGRATION POINT ──────────────────────────────────────
-     Replace or supplement saveUsers() with:
-       await supabase.from('users').update({ status: 'denied' }).eq('email', email)
-  ─────────────────────────────────────────────────────────────────────── */
-  const users = loadUsers();
-  const u = users.find(x => x.email === email);
-  if (u) { u.status = 'denied'; saveUsers(users); }
+async function denyUser(email) {
+  const result = await adminUserAction('deny', email);
+  if (!result) return;
   renderAdminDashboard(); updateNav(); renderPosts();
-  toast(`${u?.name || email} denied`);
+  toast(`${email} denied`);
 }
 
 // Legacy stub kept for backward compatibility (now routes to dashboard page)
@@ -6083,11 +6104,11 @@ renderHomeGrid = function(){
   wireHomeGallery();
   enhanceLuxeSelect('blogCategory');
   enhanceLuxeSelect('blogArchive');
-  // NOTE: no default admin password is set here anymore — see doLogin().
-  // The admin account is "claimed" the first time someone signs in with
-  // ADMIN_EMAIL on a given device; whatever password they use becomes the
-  // admin password for that device. This avoids shipping a fixed password
-  // in the page source that anyone could read via View Source.
+  // NOTE: no admin password is stored in this file or in the browser
+  // anymore — see doLogin(). The first time anyone signs in with
+  // ADMIN_EMAIL, admin.js sets that password server-side (in Netlify
+  // Blobs), the same for every device from then on. Nothing secret
+  // ever lives in page source or localStorage.
   initSession();   // restore curUser from sessionStorage
   initDBLocal();   // render instantly from localStorage — no network wait
 
