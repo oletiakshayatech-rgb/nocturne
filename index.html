@@ -4597,13 +4597,16 @@ function renderPosts(){
   const allPosts = loadPosts();
   const list  = document.getElementById('postsList');
   const empty = document.getElementById('emptyState');
+  const featuredHeroEl = document.getElementById('featuredHero');
   const canWrite = curUser && (curUser.role==='admin'||curUser.role==='approved');
   const isAdmin  = curUser && curUser.role==='admin';
+
+  if (!list || !empty) return; // page-blog isn't in the DOM yet — nothing to render into
 
   populateBlogControls(allPosts);
 
   if (allPosts.length===0) {
-    document.getElementById('featuredHero').innerHTML = '';
+    if (featuredHeroEl) featuredHeroEl.innerHTML = '';
     list.innerHTML=''; empty.innerHTML = emptyStateHTML('none');
     list.appendChild(empty); empty.style.display='';
     return;
