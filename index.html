@@ -1674,10 +1674,23 @@ footer {
 /* ╔══════════════════════════════════════════════╗
    ║  RESPONSIVE                                  ║
    ╚══════════════════════════════════════════════╝ */
+
+/* Tablet range — nav has less room than desktop but doesn't need to
+   collapse to a hamburger yet. Tightens continuously rather than
+   jumping straight from full-desktop nav to the mobile menu. */
+@media(max-width:900px) and (min-width:701px){
+  .nav-links{ gap:1.3rem; }
+  .nav-links a{ font-size:.64rem; }
+  .nav-pill{ font-size:.62rem; padding:.5rem .85rem; }
+  .nav-uname{ display:none; } /* keep avatar + sign out, drop the name label to save space */
+}
+
 @media(max-width:700px){
-  .nav-links{display:none;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:rgba(12,11,10,.97);padding:2rem;gap:1.5rem;border-bottom:1px solid var(--bf)}
+  .nav-links{display:none;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:rgba(12,11,10,.97);padding:2rem;gap:1.5rem;border-bottom:1px solid var(--bf);max-height:calc(100vh - 68px);overflow-y:auto}
   .nav-links.open{display:flex}
-  .hamburger{display:flex}
+  .nav-links a{display:block;width:100%;padding:.5rem 0}
+  .hamburger{display:flex;padding:10px;margin:-10px}
+  .nav-brand{font-size:1.05rem}
   .pub-hdr { flex-direction: column-reverse; }
   .pub-thumb { width: 100%; height: 180px; border-left: none; border-bottom: 1px solid var(--bf); }
   .pub-hdr-l { padding: 1rem 1.1rem .9rem; }
@@ -1688,6 +1701,24 @@ footer {
   .modal-tabs{gap:0}
   .modal-tab{font-size:.58rem;padding:.5rem .7rem}
   .approve-panel{overflow-x:auto}
+  .post-grid{grid-template-columns:1fr}
+  .modal{padding:1.7rem 1.4rem;max-height:calc(100vh - 3rem);overflow-y:auto}
+  .adm-table th, .adm-table td{padding:.65rem .75rem}
+  .adm-col-joined{display:none}
+  .ed-topbar{padding:.75rem 1rem}
+  .hero-btns{width:100%}
+  .hero-btns .btn{flex:1 1 auto;justify-content:center}
+}
+
+@media(max-width:480px){
+  .modal{padding:1.4rem 1.1rem}
+  .adm-stats{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem}
+  .stat-card{padding:1rem}
+  .stat-card .s-val{font-size:1.6rem}
+  .eng-bar{padding:.7rem 1rem;gap:.35rem}
+  .eng-btn{padding:4px 8px;font-size:.56rem}
+  .bt-sorts{gap:.4rem}
+  .bt-tab, .tag-pill{font-size:.58rem;padding:.5rem .85rem}
 }
 
 /* ╔══════════════════════════════════════════════╗
@@ -2602,7 +2633,7 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
           <tr>
             <th>Name</th>
             <th>Email</th>
-            <th>Joined</th>
+            <th class="adm-col-joined">Joined</th>
             <th>Access Status</th>
             <th>Actions</th>
           </tr>
@@ -3353,7 +3384,7 @@ async function renderAdminDashboard() {
         <div class="adm-cell-name">${esc(u.name)}</div>
       </td>
       <td><div class="adm-cell-email">${esc(u.email)}</div></td>
-      <td><div class="adm-cell-date">${joined}</div></td>
+      <td class="adm-col-joined"><div class="adm-cell-date">${joined}</div></td>
       <td>${pillHtml}</td>
       <td><div class="adm-act-row">${actHtml}</div></td>
     </tr>`;
