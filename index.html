@@ -238,7 +238,7 @@ nav {
 }
 .hero-rule { width: 48px; height: 1px; background: var(--a); margin: 0 auto 2rem; opacity: .45; animation: fu .7s .1s both; }
 .hero-kicker { font-family: var(--f-nav); font-size: .68rem; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--a); margin-bottom: 1.3rem; animation: fu .7s .2s both; }
-.hero-title { font-size: clamp(3rem, 9vw, 7rem); margin-bottom: 1.4rem; animation: fu .7s .35s both; }
+.hero-title { font-size: clamp(2.4rem, 1.6rem + 5.5vw, 7rem); margin-bottom: 1.4rem; animation: fu .7s .35s both; }
 .hero-title em { color: var(--a); }
 .hero-sub { max-width: 520px; font-size: 1.05rem; color: var(--ts); margin: 0 auto 2.5rem; animation: fu .7s .5s both; }
 .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; animation: fu .7s .65s both; }
@@ -305,7 +305,7 @@ nav {
 }
 .read-hero-tag::after { content:''; width:24px; height:1px; background:var(--ab); }
 .read-hero-title {
-  font-family: var(--f-head); font-size: clamp(2rem, 5vw, 3.2rem);
+  font-family: var(--f-head); font-size: clamp(1.6rem, 1.1rem + 3.6vw, 3.2rem);
   font-weight: 400; line-height: 1.12; color: var(--tp);
   margin-bottom: .55rem;
 }
@@ -387,7 +387,7 @@ nav {
 .read-article img[data-align="center"]{ float:none; margin:1.5rem auto; display:block; }
 .read-article img[data-align="full"]  { float:none; width:100%!important; margin:1.5rem 0; }
 .read-article::after { content:''; display:table; clear:both; }
-.read-article figcaption { font-family:var(--f-head); font-size:1rem; color:#e8c07a; text-align:left; padding-top:.4rem; letter-spacing:.02em; line-height:1.4; display:block; max-width:100%; }
+.read-article figcaption { font-family:var(--f-head); font-size:1rem; color:#e8c07a; text-align:left; padding-top:.4rem; letter-spacing:.02em; line-height:1.4; display:block; overflow-wrap:break-word; margin-bottom:2.8rem; }
 
 /* Divider between article and engagement */
 .read-divider {
@@ -485,7 +485,7 @@ nav {
 
 #page-about { max-width: 800px; margin: 0 auto; padding: 120px 5% 80px; }
 .about-kicker { font-family: var(--f-nav); font-size: .61rem; font-weight: 500; letter-spacing: .26em; text-transform: uppercase; color: var(--a); margin-bottom: .75rem; }
-.about-h1 { font-size: clamp(2rem, 5vw, 3.6rem); margin-bottom: 2.5rem; }
+.about-h1 { font-size: clamp(1.6rem, 1.1rem + 3.6vw, 3.6rem); margin-bottom: 2.5rem; }
 .about-body p { color: var(--ts); margin-bottom: 1.5rem; font-size: 1.04rem; line-height: 1.92; }
 .about-sig { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--bf); font-style: italic; color: var(--a); font-size: 1.1rem; }
 
@@ -504,7 +504,7 @@ nav {
   --arc-ease:  cubic-bezier(.4,0,.2,1);
 }
 .blog-hdr { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
-.blog-hdr h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-family:var(--f-head); font-weight:400; }
+.blog-hdr h1 { font-size: clamp(1.5rem, 1.05rem + 3.2vw, 2.8rem); font-family:var(--f-head); font-weight:400; }
 
 /* ✦ Archive heading dressing — subtitle + decorative divider ✦ */
 .archive-subtitle{
@@ -651,7 +651,7 @@ nav {
 .featured-hero-kicker {
   font-family:var(--f-nav); font-size:.62rem; letter-spacing:.16em; text-transform:uppercase; color:var(--a); margin-bottom:.6rem;
 }
-.featured-hero-title { font-size:clamp(1.4rem,3vw,2.1rem); color:var(--tp); margin-bottom:.5rem; }
+.featured-hero-title { font-size:clamp(1.2rem,.9rem + 2.6vw,2.1rem); color:var(--tp); margin-bottom:.5rem; }
 .featured-hero-sub { color:var(--ts); font-size:.95rem; max-width:60ch; }
 
 /* Reading-time / share badges on cards */
@@ -876,8 +876,8 @@ nav {
 
 /* Captions in published view */
 .pub-content figure       { margin: 1rem 0; }
-.pub-content figcaption   { font-family: var(--f-head); font-size:1rem; color:#e8c07a; text-align:center; padding-top:.5rem; letter-spacing:.02em; line-height:1.4; }
-.ed-body figcaption       { font-family: var(--f-head); font-size:1rem; color:#e8c07a; text-align:center; padding-top:.4rem; letter-spacing:.02em; line-height:1.4; }
+.pub-content figcaption   { font-family: var(--f-head); font-size:1rem; color:#e8c07a; text-align:center; padding-top:.5rem; letter-spacing:.02em; line-height:1.4; overflow-wrap:break-word; margin-bottom:2.8rem; }
+.ed-body figcaption       { font-family: var(--f-head); font-size:1rem; color:#e8c07a; text-align:center; padding-top:.4rem; letter-spacing:.02em; line-height:1.4; overflow-wrap:break-word; margin-bottom:2.8rem; }
 .ed-title {
   width: 100%; background: transparent; border: none; outline: none;
   font-family: var(--f-sub); font-size: 1.75rem; font-style: italic;
@@ -946,10 +946,27 @@ nav {
 .ed-body {
   min-height: 280px; padding: .6rem 1.4rem 1.4rem;
   outline: none; color: var(--ts);
-  font-family: var(--f-body); font-size: 1.04rem; line-height: 1.9;
+  font-family: var(--f-body); font-size: 1.02rem; line-height: 1.9;
   caret-color: var(--a);
 }
 .ed-body:empty::before { content: attr(data-placeholder); color: var(--tm); pointer-events: none; }
+
+/* Match .pub-content exactly so the editor is a true WYSIWYG preview of
+   what gets published — same heading sizes, list bullets, blockquote
+   style, and spacing the reader will actually see. */
+.ed-body h1 { font-size: 1.9rem; margin: 1.4rem 0 .6rem; }
+.ed-body h2 { font-size: 1.4rem; margin: 1.2rem 0 .5rem; }
+.ed-body h3 { font-size: 1.12rem; margin: 1rem 0 .4rem; }
+.ed-body h4, .ed-body h5, .ed-body h6 { font-family: var(--f-sub); font-style: italic; color: var(--a); margin: .9rem 0 .4rem; }
+.ed-body p { margin-bottom: 1.1rem; }
+.ed-body ul { list-style: none; margin: .6rem 0 1.1rem; padding: 0; }
+.ed-body ul li { position: relative; padding-left: 1.5rem; margin-bottom: .3rem; }
+.ed-body ul li::before { content: ''; position: absolute; left: .2rem; top: .74em; width: 5px; height: 5px; border-radius: 50%; background: var(--a); opacity: .75; }
+.ed-body ol { list-style: none; counter-reset: nc; margin: .6rem 0 1.1rem; padding: 0; }
+.ed-body ol li { counter-increment: nc; position: relative; padding-left: 2rem; margin-bottom: .3rem; }
+.ed-body ol li::before { content: counter(nc)'.'; position: absolute; left: 0; top: .14em; color: var(--a); font-family: var(--f-nav); font-size: .71rem; font-weight: 600; }
+.ed-body blockquote { border-left: 2px solid var(--a); margin: 1.4rem 0; padding: .6rem 1.4rem; color: var(--tm); font-style: italic; font-size: 1.04rem; }
+.ed-body mark { background: rgba(201,168,124,.2); color: var(--ah); padding: 1px 3px; border-radius: 2px; }
 
 /* Image drag-drop zone */
 .img-drop {
@@ -1117,7 +1134,7 @@ nav {
 .pub-content .img-wrap.align-left  { float:left;  margin:.4rem 1.6rem .6rem 0; display:inline-block; }
 .pub-content .img-wrap.align-right { float:right; margin:.4rem 0 .6rem 1.6rem; display:inline-block; }
 .pub-content .img-wrap.align-full  { display:block; width:100%; margin:1rem 0; }
-.pub-content figcaption { font-family:var(--f-head); font-size:1rem; color:#e8c07a; text-align:center; padding-top:.5rem; letter-spacing:.02em; line-height:1.4; }
+.pub-content figcaption { font-family:var(--f-head); font-size:1rem; color:#e8c07a; text-align:center; padding-top:.5rem; letter-spacing:.02em; line-height:1.4; overflow-wrap:break-word; margin-bottom:2.8rem; }
 
 .empty-state { text-align: center; padding: 3.5rem 2rem; color: var(--tm); font-family: var(--f-nav); font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; border: 1px dashed var(--bf); border-radius: var(--r2); }
 
@@ -1504,7 +1521,7 @@ footer {
   margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;
   padding-bottom: 1.4rem; border-bottom: 1px solid var(--bf);
 }
-.adm-header h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); }
+.adm-header h1 { font-size: clamp(1.4rem, 1rem + 3vw, 2.4rem); }
 .adm-meta {
   font-family: var(--f-nav); font-size: .6rem; letter-spacing: .14em;
   color: var(--tm); text-transform: uppercase;
@@ -1661,7 +1678,7 @@ footer {
   padding: 60px 5%;
 }
 .denied-icon { font-size: 3rem; margin-bottom: 1.5rem; opacity: .5; }
-.denied-h { font-size: clamp(1.8rem, 5vw, 3rem); margin-bottom: 1rem; }
+.denied-h { font-size: clamp(1.5rem, 1.05rem + 3.4vw, 3rem); margin-bottom: 1rem; }
 .denied-sub {
   font-family: var(--f-nav); font-size: .78rem; letter-spacing: .08em;
   color: var(--tm); max-width: 420px; line-height: 1.8;
@@ -1737,7 +1754,7 @@ footer {
 #introReveal.hide{ opacity:0; visibility:hidden; pointer-events:none; }
 .intro-word{ display:flex; gap:.02em; overflow:hidden; }
 .intro-word span{
-  font-family:'Bodoni Moda', var(--f-head); font-size:clamp(2.6rem,8vw,5rem); color:var(--tp);
+  font-family:'Bodoni Moda', var(--f-head); font-size:clamp(2rem,1.4rem + 5vw,5rem); color:var(--tp);
   opacity:0; transform:translateY(24px); display:inline-block;
   animation:introLetter .8s var(--ease) forwards;
 }
@@ -1855,6 +1872,7 @@ footer {
 }
 
 /* Split-text heading letters */
+.split-word{ display:inline-block; white-space:nowrap; }
 .split-letter{ display:inline-block; opacity:0; transform:translateY(.4em); animation:splitIn .6s var(--ease) forwards; }
 @keyframes splitIn{ to{ opacity:1; transform:translateY(0); } }
 
@@ -3685,11 +3703,24 @@ document.addEventListener('DOMContentLoaded', function _editorDOMInit(){
       if(!target||target===_draggingImg) return;
       let block=target;
       while(block&&block!==edBody&&getComputedStyle(block).display==='inline') block=block.parentElement;
-      if(!block||block===edBody){ edBody.appendChild(imgWrapperOf(_draggingImg)); return; }
-      const before=e.clientY<block.getBoundingClientRect().top+block.getBoundingClientRect().height/2;
-      const src=imgWrapperOf(_draggingImg);
-      if(before) block.before(src); else block.after(src);
-      if(_selImg) selectImg(_selImg);
+      if(!block||block===edBody){ edBody.appendChild(imgWrapperOf(_draggingImg)); }
+      else {
+        const before=e.clientY<block.getBoundingClientRect().top+block.getBoundingClientRect().height/2;
+        const src=imgWrapperOf(_draggingImg);
+        if(before) block.before(src); else block.after(src);
+      }
+
+      // Google-Docs-style positioning: where you drop it horizontally
+      // decides which side the text wraps on — drop it near the left
+      // edge of the column and text flows around the right; drop it
+      // near the right edge and text flows around the left; drop it
+      // in the middle third and it becomes a centered, full-line image.
+      const col = edBody.getBoundingClientRect();
+      const relX = (e.clientX - col.left) / col.width; // 0 = left edge, 1 = right edge
+      const align = relX < 0.32 ? 'left' : relX > 0.68 ? 'right' : 'center';
+      applyAlignToImg(_draggingImg, align);
+
+      if(_selImg===_draggingImg){ syncTbState(); setTimeout(posOverlay,30); }
     });
   }
 
@@ -3866,9 +3897,8 @@ function setSize(v){
 }
 
 /* ── Alignment ── */
-function setAlign(align){
-  if(!_selImg) return;
-  const img=_selImg;
+function applyAlignToImg(img, align){
+  if(!img) return;
   img.dataset.align=align;
 
   // Reset inline styles that conflict
@@ -3899,7 +3929,7 @@ function setAlign(align){
       img.style.display='block';
       img.style.margin='1rem 0';
       img.style.width='100%';
-      document.getElementById('imgSizeVal').value=100;
+      if(_selImg===img) document.getElementById('imgSizeVal').value=100;
       break;
   }
 
@@ -3921,7 +3951,35 @@ function setAlign(align){
       cap.style.display = ''; cap.style.marginTop = '';
     }
   }
+  syncCaptionWidth(img);
+}
 
+/* Keeps a caption locked to its image's exact width, on the exact same
+   side, so it always reads as "attached to" the image rather than
+   spanning the full column. Uses the same CSS width value (a %, so it
+   holds up at any screen size since both elements share one parent),
+   with left/right/center margins matching the image's own alignment —
+   long captions wrap onto more lines within that width rather than
+   spilling out to the full text column. */
+function syncCaptionWidth(img){
+  if(!img) return;
+  const cap = img.nextElementSibling;
+  if(!cap || cap.tagName !== 'FIGCAPTION') return;
+  const align = img.dataset.align || 'center';
+  cap.style.width = img.style.width || '100%';
+  cap.style.boxSizing = 'border-box';
+  if(align === 'left'){
+    cap.style.marginLeft = '0'; cap.style.marginRight = 'auto';
+  } else if(align === 'right'){
+    cap.style.marginLeft = 'auto'; cap.style.marginRight = '0';
+  } else {
+    cap.style.marginLeft = 'auto'; cap.style.marginRight = 'auto';
+  }
+}
+
+function setAlign(align){
+  if(!_selImg) return;
+  applyAlignToImg(_selImg, align);
   syncTbState();
   setTimeout(posOverlay,30);
   toast('Alignment: '+align);
@@ -3970,6 +4028,7 @@ function applyCaption(text){
       cap.style.marginTop = '';
     }
     console.log('Final figcaption in DOM:', document.getElementById('edBody').innerHTML.includes(text));
+    syncCaptionWidth(_selImg);
     toast('Caption added');
   } else if(isCap){
     cap.remove();
@@ -4052,6 +4111,7 @@ function onResizeMove(e){
     const pct=Math.round(newW/edW*100);
     img.style.width=pct+'%';
     document.getElementById('imgSizeVal').value=pct;
+    syncCaptionWidth(img);
     posOverlay();
   });
 }
@@ -4122,6 +4182,7 @@ function setAlignOnLoad(img){
       cap.style.display = ''; cap.style.marginTop = '';
     }
   }
+  syncCaptionWidth(img);
 }
 
 /* backward-compat stubs */
@@ -5359,7 +5420,7 @@ function renderHomeGrid(){
       <div class="card-body">
         <div class="card-tag">${esc(p.tag)}</div>
         <div class="card-title">${esc(p.title)}</div>
-        <div class="card-excerpt">${strip(p.body).slice(0,115)}…</div>
+        <div class="card-excerpt">${p.subtitle ? esc(p.subtitle) : strip(p.body).slice(0,115)+'…'}</div>
         <div class="card-meta">
           <span>${esc(p.author)}</span>
           <span>♥ ${eng.likes} · 👁 ${eng.views}</span>
@@ -5416,9 +5477,16 @@ function splitText(el){
   if(!el || el.dataset.split) return;
   el.dataset.split = '1';
   const text = el.textContent;
-  el.innerHTML = text.split('').map((ch,i)=>
-    `<span class="split-letter" style="animation-delay:${(i*0.035).toFixed(2)}s">${ch===' '?'&nbsp;':ch}</span>`
-  ).join('');
+  let i = 0;
+  el.innerHTML = text.split(' ').map(word => {
+    const letters = word.split('').map(ch => {
+      const span = `<span class="split-letter" style="animation-delay:${(i*0.035).toFixed(2)}s">${ch}</span>`;
+      i++;
+      return span;
+    }).join('');
+    i++; // keep the stagger timing continuous across the space we're about to add back
+    return `<span class="split-word">${letters}</span>`;
+  }).join(' ');
 }
 
 /* ══════════════════════════════════════
