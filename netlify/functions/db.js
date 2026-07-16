@@ -1,11 +1,15 @@
 /* ══════════════════════════════════════════════════════════════
    PUBLIC endpoint — readable by any guest, anywhere.
 
-   GET  -> { posts, eng }   (no users, no password hashes, no admin data)
+   GET  -> { posts, eng, homepage }   (no users, no password hashes, no admin data)
 
-   Nothing else is exposed here. Writes to posts/engagement happen in
-   save.js; writes to users happen in admin.js. This file never writes
-   anything.
+   `homepage` is just site configuration (which sections are on, which
+   posts are pinned as Featured/Trending, hero mode) — not sensitive,
+   and every visitor's homepage needs it to render correctly.
+
+   Nothing else is exposed here. Writes to posts/engagement/homepage
+   happen in save.js; writes to users happen in admin.js. This file
+   never writes anything.
 ══════════════════════════════════════════════════════════════ */
 const { getDbStore, readDb } = require('./_store');
 
@@ -39,6 +43,7 @@ exports.handler = async (event) => {
     const publicPayload = {
       posts: db.posts,
       eng: db.eng,
+      homepage: db.homepage,
     };
 
     return { statusCode: 200, headers: HEADERS, body: JSON.stringify(publicPayload) };

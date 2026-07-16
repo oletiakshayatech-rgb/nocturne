@@ -1,5 +1,6 @@
 /* ══════════════════════════════════════════════════════════════
-   Post writes (protected) + engagement writes (public).
+   Post writes (protected) + engagement writes (public) + homepage
+   settings (admin only).
 
    POST { type: 'posts', posts: [...] }
         Authorization: Bearer <token>   (role must be 'admin' or 'approved')
@@ -13,9 +14,15 @@
         or db.users, and is shape-checked so it can't be used to
         smuggle arbitrary data into the store.
 
+   POST { type: 'homepage', homepage: {...} }
+        Authorization: Bearer <token>   (role must be 'admin')
+        Replaces the homepage configuration (section on/off switches,
+        hero mode, curated Featured/Trending picks). Admin-only, unlike
+        post writes which approved writers can also do.
+
    Nothing here ever reads or returns db.users.
 ══════════════════════════════════════════════════════════════ */
-const { getDbStore, readDb, writeDb } = require('./_store');
+const { getDbStore, readDb, writeDb, normalizeHomepage } = require('./_store');
 const { verifyToken, getBearerToken } = require('./_auth');
 const { sanitizeText, sanitizeHtml, isPlainObject } = require('./_validate');
 
@@ -38,6 +45,13 @@ function requireWriter(event) {
   const payload = token ? verifyToken(token) : null;
   if (!payload) return null;
   if (payload.role !== 'admin' && payload.role !== 'approved') return null;
+  return payload;
+}
+
+function requireAdmin(event) {
+  const token = getBearerToken(event);
+  const payload = token ? verifyToken(token) : null;
+  if (!payload || payload.role !== 'admin') return null;
   return payload;
 }
 
@@ -196,6 +210,31 @@ exports.handler = async (event) => {
 
       await writeDb(store, db);
       return json(200, { ok: true, posts: db.posts.length });
+    }
+
+    /* ── HOMEPAGE SETTINGS (admin only) ── */
+    if (type === 'homepage') {
+      const admin = requireAdmin(event);
+      if (!admin) return json(401, { error: 'Unauthorized — admin only' });
+
+      if (!isPlainObject(body.homepage)) {
+        return json(400, { error: 'Missing or invalid homepage payload' });
+      }
+
+      const db = await readDb(store);
+      const validIds = new Set(db.posts.map(p => String(p.id)));
+      const cleaned = normalizeHomepage(body.homepage);
+
+      // Drop any curated post id that no longer exists (deleted post, etc.)
+      cleaned.featured.postIds = cleaned.featured.postIds.filter(id => validIds.has(String(id)));
+      cleaned.trending.postIds = cleaned.trending.postIds.filter(id => validIds.has(String(id)));
+      if (cleaned.hero.postId != null && !validIds.has(String(cleaned.hero.postId))) {
+        cleaned.hero.postId = null;
+      }
+
+      db.homepage = cleaned;
+      await writeDb(store, db);
+      return json(200, { ok: true, homepage: cleaned });
     }
 
     return json(400, { error: 'Unknown type' });
