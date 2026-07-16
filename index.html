@@ -269,6 +269,12 @@ nav {
 .card-excerpt { font-size: .88rem; color: var(--tm); line-height: 1.65; margin-bottom: .9rem; }
 .card-meta { font-family: var(--f-nav); font-size: .59rem; color: var(--tm); letter-spacing: .06em; display: flex; justify-content: space-between; }
 
+/* Recent Writing — portrait book-cover style cards, narrower and taller
+   than the default landscape card used by Featured. Scoped to #homeGrid
+   only so Featured keeps its original look. */
+#homeGrid.post-grid{ grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 1.6rem; }
+#homeGrid .card-thumb{ height:auto; aspect-ratio: 2 / 3; }
+
 /* ╔══════════════════════════════════════════════╗
    ║  READ PAGE (full article view)               ║
    ╚══════════════════════════════════════════════╝ */
@@ -841,7 +847,7 @@ nav {
 }
 .featured-hero-title { font-size:clamp(1.2rem,.9rem + 2.6vw,2.1rem); color:var(--tp); margin-bottom:.5rem; }
 .featured-hero-sub { color:var(--ts); font-size:.95rem; max-width:60ch; }
-#heroSpotlight{ width:100%; max-width:900px; margin:0 auto 2rem; text-align:left; }
+#heroSpotlight{ width:100%; max-width:900px; margin:clamp(3rem, 10vw, 12rem) auto 2rem; text-align:left; }
 #heroSpotlight .featured-hero{ margin-bottom:0; animation:fu .7s .5s both; }
 
 /* Reading-time / share badges on cards */
@@ -2536,23 +2542,6 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
       </button>
     </div>
   </div>
-
-  <!-- Admin-curated Featured — Dashboard → Homepage → Featured Articles -->
-  <div class="home-recent" id="homeFeatured" style="display:none">
-    <p class="sec-label">Featured</p>
-    <div class="post-grid" id="homeFeaturedGrid"></div>
-  </div>
-
-  <!-- Trending — automatic (by engagement) or admin-curated manual picks -->
-  <div class="home-recent" id="homeTrending" style="display:none">
-    <p class="sec-label">Trending now</p>
-    <div class="post-grid" id="homeTrendingGrid"></div>
-  </div>
-
-  <div class="home-recent" id="homeRecent" style="display:none">
-    <p class="sec-label">Recent writing</p>
-    <div class="post-grid" id="homeGrid"></div>
-  </div>
 </div>
 
 <!-- ════════════════ ABOUT ════════════════ -->
@@ -2579,8 +2568,6 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
   <p id="readOnlyNote" style="font-family:var(--f-nav);font-size:.67rem;letter-spacing:.1em;color:var(--tm);margin-bottom:2rem;display:none">
     Reading as a guest. <button onclick="openAuth('signup')" style="background:none;border:none;color:var(--a);font-family:var(--f-nav);font-size:.67rem;letter-spacing:.1em;cursor:pointer;padding:0;text-decoration:underline">Apply to write →</button>
   </p>
-
-  <div id="featuredHero"></div>
 
   <div class="blog-toolbar" id="blogToolbar">
     <div class="bt-search">
@@ -3035,53 +3022,11 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
           <option value="latest">Latest published</option>
           <option value="mostViewed">Most viewed</option>
           <option value="random">Random</option>
-          <option value="featured">Editor's Featured pick</option>
           <option value="manual">Manually choose…</option>
         </select>
         <div id="hpHeroManualWrap" style="display:none; margin-top:.8rem;">
           <label class="adm-hp-label">Article</label>
           <select id="hpHeroManualPost"></select>
-        </div>
-      </div>
-    </div>
-
-    <div class="adm-table-wrap adm-hp-block">
-      <div class="adm-table-header"><span class="adm-table-title">Featured articles</span></div>
-      <div class="adm-panel-body">
-        <p class="adm-hp-hint">Hand-pick which articles appear in the homepage Featured row, in this order.</p>
-        <div class="adm-hp-picker-row">
-          <div>
-            <label class="adm-hp-label">Add an article</label>
-            <select id="hpFeaturedAdd" onchange="hpAddFeatured()"><option value="">Choose an article…</option></select>
-          </div>
-        </div>
-        <div class="adm-hp-picklist" id="hpFeaturedList"></div>
-      </div>
-    </div>
-
-    <div class="adm-table-wrap adm-hp-block">
-      <div class="adm-table-header"><span class="adm-table-title">Trending</span></div>
-      <div class="adm-panel-body">
-        <label class="adm-hp-label">Mode</label>
-        <select id="hpTrendingMode" onchange="onHpTrendingModeChange()">
-          <option value="auto">Automatic — ranked by likes &amp; views</option>
-          <option value="manual">Manual — I'll pick them</option>
-        </select>
-
-        <div id="hpTrendingAutoWrap" style="margin-top:.8rem;">
-          <label class="adm-hp-label">Time range</label>
-          <select id="hpTrendingRange">
-            <option value="today">Today</option>
-            <option value="week">This week</option>
-            <option value="month">This month</option>
-            <option value="all">All time</option>
-          </select>
-        </div>
-
-        <div id="hpTrendingManualWrap" style="display:none; margin-top:.8rem;">
-          <label class="adm-hp-label">Add an article</label>
-          <select id="hpTrendingAdd" onchange="hpAddTrending()"><option value="">Choose an article…</option></select>
-          <div class="adm-hp-picklist" id="hpTrendingList"></div>
         </div>
       </div>
     </div>
@@ -3815,10 +3760,7 @@ function refreshHpUI(){
 
   const toggles = [
     { key:'heroSpotlight', label:'Hero spotlight',   desc:'A single admin-picked article shown below the welcome banner.' },
-    { key:'featured',      label:'Featured articles', desc:'Hand-picked row of articles.' },
-    { key:'trending',      label:'Trending',          desc:'Automatic or manual "trending now" row.' },
-    { key:'recent',        label:'Recent writing',    desc:'The latest published articles.' },
-    { key:'gallery',       label:'Archive gallery',   desc:'The scrolling "From the archive" strip.' },
+    { key:'gallery',       label:'Archive gallery',   desc:'The scrolling "From the archive" strip. Featured (★) and trending posts appear here automatically.' },
   ];
   document.getElementById('hpSectionToggles').innerHTML = toggles.map(t => `
     <div class="adm-hp-toggle">
@@ -3835,21 +3777,6 @@ function refreshHpUI(){
   const heroSelect = document.getElementById('hpHeroManualPost');
   heroSelect.innerHTML = posts.map(p=>`<option value="${p.id}">${esc(p.title)}</option>`).join('');
   if(_hpDraft.hero.postId != null) heroSelect.value = _hpDraft.hero.postId;
-
-  const featAdd = document.getElementById('hpFeaturedAdd');
-  featAdd.innerHTML = `<option value="">Choose an article…</option>` +
-    posts.filter(p=>!_hpDraft.featured.postIds.map(String).includes(String(p.id)))
-         .map(p=>`<option value="${p.id}">${esc(p.title)}</option>`).join('');
-  renderHpPicklist('hpFeaturedList', _hpDraft.featured.postIds, 'featured');
-
-  document.getElementById('hpTrendingMode').value = _hpDraft.trending.mode;
-  document.getElementById('hpTrendingRange').value = _hpDraft.trending.range;
-  onHpTrendingModeChange(true);
-  const trendAdd = document.getElementById('hpTrendingAdd');
-  trendAdd.innerHTML = `<option value="">Choose an article…</option>` +
-    posts.filter(p=>!_hpDraft.trending.postIds.map(String).includes(String(p.id)))
-         .map(p=>`<option value="${p.id}">${esc(p.title)}</option>`).join('');
-  renderHpPicklist('hpTrendingList', _hpDraft.trending.postIds, 'trending');
 }
 
 function hpToggleSection(key, el){
@@ -3862,13 +3789,6 @@ function onHpHeroModeChange(skipDraftUpdate){
   const mode = document.getElementById('hpHeroMode').value;
   if(!skipDraftUpdate) _hpDraft.hero.mode = mode;
   document.getElementById('hpHeroManualWrap').style.display = mode==='manual' ? '' : 'none';
-}
-
-function onHpTrendingModeChange(skipDraftUpdate){
-  const mode = document.getElementById('hpTrendingMode').value;
-  if(!skipDraftUpdate) _hpDraft.trending.mode = mode;
-  document.getElementById('hpTrendingAutoWrap').style.display = mode==='auto' ? '' : 'none';
-  document.getElementById('hpTrendingManualWrap').style.display = mode==='manual' ? '' : 'none';
 }
 
 function renderHpPicklist(elId, ids, kind){
@@ -3891,18 +3811,6 @@ function renderHpPicklist(elId, ids, kind){
   }).join('');
 }
 
-function hpAddFeatured(){
-  const sel = document.getElementById('hpFeaturedAdd');
-  if(!sel.value) return;
-  _hpDraft.featured.postIds.push(sel.value);
-  refreshHpUI();
-}
-function hpAddTrending(){
-  const sel = document.getElementById('hpTrendingAdd');
-  if(!sel.value) return;
-  _hpDraft.trending.postIds.push(sel.value);
-  refreshHpUI();
-}
 function hpRemove(kind, id){
   _hpDraft[kind].postIds = _hpDraft[kind].postIds.filter(x=>String(x)!==String(id));
   refreshHpUI();
@@ -3919,8 +3827,6 @@ async function saveHomepageSettings(){
   if(!_hpDraft) return;
   _hpDraft.hero.mode = document.getElementById('hpHeroMode').value;
   _hpDraft.hero.postId = _hpDraft.hero.mode==='manual' ? document.getElementById('hpHeroManualPost').value : null;
-  _hpDraft.trending.mode = document.getElementById('hpTrendingMode').value;
-  _hpDraft.trending.range = document.getElementById('hpTrendingRange').value;
 
   const status = document.getElementById('hpSaveStatus');
   status.textContent = 'Saving…';
@@ -5415,37 +5321,10 @@ async function toggleGallerySpot(id){
   await writeNow();
 }
 
-function renderFeaturedHero(posts){
-  const slot = document.getElementById('featuredHero');
-  if (!slot) return null;
-
-  // Only show the dedicated hero on the default, unfiltered "Latest" view —
-  // otherwise it'd duplicate whatever the person just filtered/sorted for.
-  const isDefaultView = _blogSort==='latest' && !_blogSearch && !_blogCategory && !_blogArchive;
-  if (!isDefaultView) { slot.innerHTML=''; return null; }
-
-  const featured = posts.find(p=>p.featured) || null;
-  if (!featured) { slot.innerHTML=''; return null; }
-
-  const eng = getEng(featured.id)[String(featured.id)];
-  const thumb = featured.thumbnail ? `<img src="${featured.thumbnail}" alt="${esc(featured.title)}">` : '';
-  slot.innerHTML = `
-    <div class="featured-hero" onclick="openPost(${featured.id},'blog')">
-      ${thumb}
-      <div class="featured-hero-body">
-        <div class="featured-hero-kicker">★ Featured story · ${readingTime(featured.body)} min read · ${eng.views} views</div>
-        <div class="featured-hero-title">${esc(featured.title)}</div>
-        ${featured.subtitle ? `<div class="featured-hero-sub">${esc(featured.subtitle)}</div>` : ''}
-      </div>
-    </div>`;
-  return featured.id; // caller can exclude this from the list below
-}
-
 function renderPosts(){
   const allPosts = loadPosts();
   const list  = document.getElementById('postsList');
   const empty = document.getElementById('emptyState');
-  const featuredHeroEl = document.getElementById('featuredHero');
   const canWrite = curUser && (curUser.role==='admin'||curUser.role==='approved');
   const isAdmin  = curUser && curUser.role==='admin';
 
@@ -5454,17 +5333,16 @@ function renderPosts(){
   populateBlogControls(allPosts);
 
   if (allPosts.length===0) {
-    if (featuredHeroEl) featuredHeroEl.innerHTML = '';
     list.innerHTML=''; empty.innerHTML = emptyStateHTML('none');
     list.appendChild(empty); empty.style.display='';
     return;
   }
 
-  const heroId = renderFeaturedHero(allPosts);
-
   // ── filter ──
+  // Featured/trending posts now surface only in the "From the archive"
+  // gallery (see renderHomeGallery) — no separate banner here, so
+  // nothing needs to be excluded from this list.
   let posts = allPosts.filter(p=>{
-    if (heroId!=null && p.id===heroId) return false;
     if (_blogCategory && (p.tag||'Essay') !== _blogCategory) return false;
     if (_blogArchive && monthKey(postTs(p)) !== _blogArchive) return false;
     if (_blogSearch) {
@@ -6184,14 +6062,11 @@ function buildHomeCardHTML(p, pageCtx){
 }
 
 function renderHomeGrid(){
-  const posts=loadPosts();
-  const sec=document.getElementById('homeRecent');
+  // Recent Writing was removed from the homepage — the Hero Spotlight
+  // above already surfaces the latest post. This function name is kept
+  // (and still called from everywhere posts change) purely so every
+  // other homepage section keeps refreshing without touching 8 call sites.
   renderHomeCuration();
-  if(posts.length===0){sec.style.display='none';return;}
-  const hp = loadHomepage();
-  if(!hp.sections.recent){ sec.style.display='none'; return; }
-  sec.style.display='block';
-  document.getElementById('homeGrid').innerHTML=posts.slice(0,3).map(p=>buildHomeCardHTML(p,'home')).join('');
 }
 
 /* ══════════════════════════════════════
@@ -6223,10 +6098,6 @@ function pickHeroPost(hp){
     const p = posts.find(x=>String(x.id)===String(hp.hero.postId));
     if(p) return p;
   }
-  if(hp.hero.mode==='featured'){
-    const p = posts.find(x=>x.featured);
-    if(p) return p;
-  }
   if(hp.hero.mode==='mostViewed'){
     return [...posts].sort((a,b)=> engScore(b)-engScore(a))[0] || posts[0];
   }
@@ -6240,8 +6111,6 @@ function pickHeroPost(hp){
 function renderHomeCuration(){
   const hp = loadHomepage();
   renderHeroSpotlight(hp);
-  renderHomeFeatured(hp);
-  renderHomeTrending(hp);
   renderHomeGallery();
 }
 
@@ -6262,38 +6131,6 @@ function renderHeroSpotlight(hp){
       </div>
     </div>`;
   el.style.display='';
-}
-
-function renderHomeFeatured(hp){
-  const sec = document.getElementById('homeFeatured');
-  const grid = document.getElementById('homeFeaturedGrid');
-  if(!sec || !grid) return;
-  if(!hp.sections.featured || !hp.featured.postIds.length){ sec.style.display='none'; return; }
-  const posts = loadPosts();
-  const picked = hp.featured.postIds
-    .map(id=>posts.find(p=>String(p.id)===String(id)))
-    .filter(Boolean);
-  if(!picked.length){ sec.style.display='none'; return; }
-  sec.style.display='block';
-  grid.innerHTML = picked.map(p=>buildHomeCardHTML(p,'home')).join('');
-}
-
-function renderHomeTrending(hp){
-  const sec = document.getElementById('homeTrending');
-  const grid = document.getElementById('homeTrendingGrid');
-  if(!sec || !grid) return;
-  if(!hp.sections.trending){ sec.style.display='none'; return; }
-
-  const posts = loadPosts();
-  let picked;
-  if(hp.trending.mode==='manual'){
-    picked = hp.trending.postIds.map(id=>posts.find(p=>String(p.id)===String(id))).filter(Boolean);
-  } else {
-    picked = computeTrendingPosts(hp.trending.range, 6);
-  }
-  if(!picked.length){ sec.style.display='none'; return; }
-  sec.style.display='block';
-  grid.innerHTML = picked.map(p=>buildHomeCardHTML(p,'home')).join('');
 }
 
 /* ══════════════════════════════════════
@@ -6887,9 +6724,23 @@ function renderHomeGallery(){
   if(!loadHomepage().sections.gallery){ wrap.style.display = 'none'; return; }
 
   const allPosts = loadPosts();
-  const curated = allPosts.filter(p=>p.gallery).sort((a,b)=> (b.galleryTs||0)-(a.galleryTs||0));
-  // If the admin has hand-picked posts for the gallery, honor that selection exactly.
-  // Otherwise fall back to the most recent posts so the gallery is never empty.
+  const manualCurated = allPosts.filter(p=>p.gallery).sort((a,b)=> (b.galleryTs||0)-(a.galleryTs||0));
+  const featuredPosts = allPosts.filter(p=>p.featured);
+  const trendingPosts = computeTrendingPosts('all', 6);
+
+  // Featured (★) and trending posts surface here automatically — this is
+  // now the one place they get any extra spotlight, rather than a
+  // separate hero/section elsewhere. Manual gallery picks still come
+  // first so an admin's explicit choices always lead.
+  const seen = new Set();
+  const curated = [];
+  [...manualCurated, ...featuredPosts, ...trendingPosts].forEach(p=>{
+    const key = String(p.id);
+    if(!seen.has(key)){ seen.add(key); curated.push(p); }
+  });
+
+  // If there still isn't enough to fill the strip, fall back to the most
+  // recent posts so the gallery is never near-empty.
   const source = curated.length >= 2 ? curated : allPosts.slice().sort((a,b)=> postTs(b)-postTs(a));
   if(source.length < 2){ wrap.style.display = 'none'; return; }
 
