@@ -535,6 +535,37 @@ nav {
   outline:none; border-color:var(--arc-gold); background:var(--arc-glass2);
   box-shadow:0 0 0 1px var(--arc-glow), 0 0 22px var(--arc-glow);
 }
+/* "Unfurling manuscript" flourish — a gold rule unrolls outward from the
+   center underneath the search bar the moment it's focused, like unrolling
+   a scroll, and rolls back up when focus leaves. */
+.bt-search::after{
+  content:''; position:absolute; left:50%; bottom:-9px; height:1px; width:0;
+  background:linear-gradient(to right, transparent, var(--arc-gold), transparent);
+  transform:translateX(-50%);
+  transition:width .55s var(--arc-ease);
+  pointer-events:none;
+}
+.bt-search:focus-within::after{ width:100%; }
+
+/* ── "Searching the archives…" — appears while a search debounce is in
+   flight, styled like a hushed librarian's note, then hands off to the
+   fade-in results below. ── */
+.search-status{
+  display:none; align-items:center; gap:.55rem; justify-content:center;
+  font-family:var(--f-body); font-style:italic; font-size:.92rem; color:var(--arc-sub);
+  padding:1.6rem 0; letter-spacing:.02em;
+  animation:searchStatusIn .4s var(--arc-ease);
+}
+.search-status.show{ display:flex; }
+.search-status-glyph{ color:var(--arc-gold); animation:searchGlyphFlicker 1.4s ease-in-out infinite; }
+@keyframes searchStatusIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:translateY(0); } }
+@keyframes searchGlyphFlicker{ 0%,100%{ opacity:.5; } 50%{ opacity:1; } }
+
+/* Results fade in softly once the search settles, rather than snapping
+   into place instantly. */
+.posts-list.results-fade{ animation:resultsFadeIn .5s var(--arc-ease); }
+@keyframes resultsFadeIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+.posts-list.searching{ opacity:.35; filter:blur(1px); transition:opacity .3s var(--arc-ease), filter .3s var(--arc-ease); pointer-events:none; }
 
 /* ── Sort pills (bt-tab) — luxury glass pill ── */
 .bt-sorts { display:flex; flex-wrap:wrap; gap:.5rem; }
@@ -586,7 +617,165 @@ nav {
   100%{ transform:translate(-50%,-50%) scale(1); opacity:0; }
 }
 
-.bt-row2 { display:flex; flex-wrap:wrap; gap:.7rem; align-items:center; }
+/* ══════════════════════════════════════
+   LIBRARY BOOKSHELF — category navigation
+══════════════════════════════════════ */
+.lib-shelf-wrap{ position:relative; margin:1.6rem 0 .6rem; padding-top:2.6rem; }
+
+/* Decorative props sitting along the top edge of the shelf board */
+.lib-shelf-props{ position:absolute; top:0; left:0; right:0; height:2.6rem; pointer-events:none; }
+.lib-prop{ position:absolute; bottom:0; opacity:.9; }
+.lib-prop-candle{ left:6%; display:flex; flex-direction:column; align-items:center; }
+.lib-candle-body{ width:10px; height:26px; background:linear-gradient(180deg,#3a3229,#221c17); border-radius:2px 2px 1px 1px; box-shadow:0 0 10px rgba(245,201,104,.15); }
+.lib-candle-flame{
+  width:6px; height:11px; margin-bottom:-2px; border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+  background:radial-gradient(circle at 50% 70%, #fff2c4, #f5c968 45%, #d98a2b 80%, transparent 100%);
+  animation: candleFlicker 2.6s ease-in-out infinite;
+  filter:drop-shadow(0 0 6px rgba(245,201,104,.55));
+}
+@keyframes candleFlicker{
+  0%,100%{ transform:scaleY(1) scaleX(1) rotate(0deg); opacity:1; }
+  25%{ transform:scaleY(1.08) scaleX(.94) rotate(-2deg); opacity:.92; }
+  50%{ transform:scaleY(.94) scaleX(1.05) rotate(1deg); opacity:1; }
+  75%{ transform:scaleY(1.05) scaleX(.96) rotate(2deg); opacity:.95; }
+}
+.lib-prop-lantern{ left:47%; }
+.lib-lantern-glow{
+  position:absolute; left:50%; bottom:8px; width:34px; height:34px; transform:translateX(-50%);
+  background:radial-gradient(circle, rgba(245,201,104,.28), transparent 70%);
+  animation: candleFlicker 3.4s ease-in-out infinite; animation-delay:.6s;
+}
+.lib-prop-globe{ right:6%; left:auto; }
+
+@media(prefers-reduced-motion: reduce){
+  .lib-candle-flame, .lib-lantern-glow{ animation:none; }
+}
+
+/* The shelf itself — books stand on it, tallest and shortest side by side
+   for a lived-in, hand-collected look rather than a uniform grid. */
+.lib-shelf{
+  display:flex; align-items:flex-end; gap:6px;
+  padding:0 1.2rem; overflow-x:auto; overflow-y:visible;
+  scrollbar-width:thin; scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+.lib-shelf::-webkit-scrollbar{ height:6px; }
+.lib-shelf::-webkit-scrollbar-thumb{ background:rgba(184,154,90,.3); border-radius:3px; }
+
+.lib-shelf-board{
+  height:16px; margin:0 .4rem;
+  background:linear-gradient(180deg, #2a1d14 0%, #1b120c 55%, #120b07 100%);
+  border-radius:2px;
+  box-shadow:0 10px 24px rgba(0,0,0,.55), inset 0 1px 0 rgba(212,175,120,.12);
+  position:relative;
+}
+.lib-shelf-board::before{
+  /* subtle wood grain */
+  content:''; position:absolute; inset:0; border-radius:2px; opacity:.5;
+  background-image:repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 2px, transparent 2px 26px);
+}
+.lib-shelf-board-top{
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, rgba(212,175,120,.35), transparent);
+}
+
+/* ── Books ── */
+.lib-book{
+  position:relative; flex:0 0 auto; width:38px; height:var(--book-h, 140px);
+  background:linear-gradient(100deg, var(--book-leather), color-mix(in srgb, var(--book-leather) 70%, #000));
+  border:1px solid rgba(212,175,120,.28); border-radius:3px 5px 5px 3px;
+  box-shadow:inset 2px 0 0 rgba(212,175,120,.18), inset -1px 0 0 rgba(0,0,0,.4), 0 6px 14px rgba(0,0,0,.35);
+  cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  padding:.7rem 0 .6rem; gap:.5rem;
+  transition:transform .38s cubic-bezier(.34,1.56,.64,1), box-shadow .38s var(--arc-ease), filter .3s var(--arc-ease);
+}
+.lib-book::before{
+  /* embossed gold frame */
+  content:''; position:absolute; inset:5px; border:1px solid rgba(212,175,120,.35);
+  border-radius:2px 4px 4px 2px; transition:border-color .3s var(--arc-ease), box-shadow .3s var(--arc-ease);
+}
+.lib-book-spine-title{
+  writing-mode:vertical-rl; transform:rotate(180deg);
+  font-family:var(--f-head); font-size:.72rem; letter-spacing:.03em; color:var(--a);
+  opacity:.85; transition:opacity .3s var(--arc-ease), text-shadow .3s var(--arc-ease);
+  max-height:calc(100% - 1.6rem); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.lib-book-count{
+  font-family:var(--f-nav); font-size:.55rem; color:var(--arc-sub); opacity:.7;
+  border:1px solid rgba(212,175,120,.25); border-radius:20px; padding:1px 6px;
+}
+.lib-book:hover, .lib-book:focus-visible{
+  transform:translateY(-6px);
+  box-shadow:inset 2px 0 0 rgba(212,175,120,.28), inset -1px 0 0 rgba(0,0,0,.4), 0 14px 26px rgba(0,0,0,.5), 0 4px 18px rgba(245,201,104,.18);
+}
+.lib-book:hover .lib-book-spine-title, .lib-book:focus-visible .lib-book-spine-title{
+  opacity:1; text-shadow:0 0 10px rgba(245,201,104,.45);
+}
+.lib-book:hover::before, .lib-book:focus-visible::before{ border-color:rgba(212,175,120,.65); }
+.lib-book.selected{
+  transform:translateY(-18px);
+  box-shadow:inset 2px 0 0 rgba(212,175,120,.32), inset -1px 0 0 rgba(0,0,0,.4), 0 20px 34px rgba(0,0,0,.55), 0 6px 22px rgba(245,201,104,.28);
+}
+.lib-book.selected::before{ border-color:rgba(230,196,140,.85); }
+.lib-book.selected .lib-book-spine-title{ opacity:1; text-shadow:0 0 12px rgba(245,201,104,.55); }
+.lib-book.selected::after{
+  content:''; position:absolute; left:10%; right:10%; bottom:-10px; height:8px;
+  background:radial-gradient(ellipse at center, rgba(245,201,104,.35), transparent 70%);
+  filter:blur(2px);
+}
+@media(prefers-reduced-motion: reduce){
+  .lib-book{ transition:box-shadow .2s var(--arc-ease); }
+  .lib-book:hover, .lib-book.selected{ transform:none; }
+}
+
+/* ── Carousel of articles for the selected book ── */
+.lib-carousel-wrap{ margin-top:1.6rem; opacity:0; }
+.lib-carousel-wrap.lib-car-in{ animation:libCarIn .45s var(--arc-ease) forwards; }
+@keyframes libCarIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+.lib-carousel-hdr{ display:flex; align-items:center; justify-content:space-between; margin-bottom:.8rem; }
+.lib-carousel-title{ font-family:var(--f-head); font-size:1.05rem; color:var(--tp); }
+.lib-carousel-close{
+  background:none; border:1px solid rgba(184,154,90,.35); color:var(--arc-sub);
+  font-family:var(--f-nav); font-size:.6rem; letter-spacing:.08em; text-transform:uppercase;
+  padding:.5rem .9rem; border-radius:var(--r1); cursor:pointer;
+  transition:border-color .3s var(--arc-ease), color .3s var(--arc-ease);
+}
+.lib-carousel-close:hover{ border-color:var(--arc-gold); color:var(--arc-text); }
+.lib-carousel-scroller{ position:relative; display:flex; align-items:center; gap:.6rem; }
+.lib-carousel{
+  display:flex; gap:1.2rem; overflow-x:auto; scroll-snap-type:x proximity;
+  padding:.4rem .2rem 1rem; flex:1; cursor:grab; scroll-behavior:smooth;
+  scrollbar-width:thin;
+}
+.lib-carousel.dragging{ cursor:grabbing; scroll-behavior:auto; }
+.lib-carousel::-webkit-scrollbar{ height:6px; }
+.lib-carousel::-webkit-scrollbar-thumb{ background:rgba(184,154,90,.3); border-radius:3px; }
+.lib-carousel-card{
+  flex:0 0 auto; width:min(82vw, 340px); scroll-snap-align:start;
+  transition:transform .35s var(--arc-ease), box-shadow .35s var(--arc-ease);
+  border-radius:var(--r2);
+}
+.lib-carousel-card:hover{ transform:translateY(-5px); box-shadow:0 18px 40px rgba(0,0,0,.45), 0 0 0 1px rgba(212,175,120,.4); }
+.lib-carousel-card:hover img{ transform:scale(1.05); }
+.lib-carousel-card .pub-post{ height:100%; }
+.lib-carousel-card .pub-hdr{ flex-direction:column-reverse; height:100%; }
+.lib-carousel-card .pub-thumb{ width:100%; height:170px; border-left:none; border-bottom:1px solid var(--bf); overflow:hidden; }
+.lib-carousel-card .pub-thumb img{ transition:transform .5s var(--arc-ease); width:100%; height:100%; object-fit:cover; }
+.lib-car-nav{
+  flex:0 0 auto; width:38px; height:38px; border-radius:50%;
+  background:var(--arc-glass); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(184,154,90,.35); color:var(--arc-text); font-size:1.1rem; cursor:pointer;
+  transition:border-color .3s var(--arc-ease), box-shadow .3s var(--arc-ease), transform .2s var(--arc-ease);
+}
+.lib-car-nav:hover{ border-color:var(--arc-gold); box-shadow:0 0 16px var(--arc-glow); transform:translateY(-2px); }
+
+@media(max-width:700px){
+  .lib-shelf-wrap{ padding-top:2rem; }
+  .lib-prop-globe{ display:none; } /* keep it uncluttered on small screens */
+  .lib-book{ width:32px; }
+  .lib-book-spine-title{ font-size:.62rem; }
+  .lib-carousel-card{ width:78vw; }
+}
 
 /* ── Custom "luxe" dropdown replacing the native <select> look ── */
 .luxe-select-wrap{ position:relative; display:inline-flex; }
@@ -618,7 +807,6 @@ nav {
 }
 .luxe-opt:hover, .luxe-opt.sel{ background:var(--arc-glow); color:var(--arc-text); }
 
-.bt-tags { display:flex; flex-wrap:wrap; gap:.4rem; }
 
 /* ── Toolbar utility buttons (Surprise Me / Gallery) ── */
 .blog-toolbar .btn-ghost{
@@ -653,6 +841,8 @@ nav {
 }
 .featured-hero-title { font-size:clamp(1.2rem,.9rem + 2.6vw,2.1rem); color:var(--tp); margin-bottom:.5rem; }
 .featured-hero-sub { color:var(--ts); font-size:.95rem; max-width:60ch; }
+#heroSpotlight{ width:100%; max-width:900px; margin:0 auto 2rem; text-align:left; }
+#heroSpotlight .featured-hero{ margin-bottom:0; animation:fu .7s .5s both; }
 
 /* Reading-time / share badges on cards */
 .pub-rt { color:var(--tm); }
@@ -1671,6 +1861,61 @@ footer {
   font-family: var(--f-nav); font-size: .62rem; letter-spacing: .1em; color: var(--tm);
 }
 
+/* ── Admin dashboard tabs ── */
+.adm-tabs{ display:flex; gap:.5rem; margin-bottom:1.4rem; border-bottom:1px solid var(--bf); }
+.adm-tab-btn{
+  background:none; border:none; color:var(--tm); cursor:pointer;
+  font-family:var(--f-nav); font-size:.68rem; letter-spacing:.08em; text-transform:uppercase;
+  padding:.8rem .3rem; margin-right:1.2rem; border-bottom:2px solid transparent;
+  transition:color .25s var(--ease), border-color .25s var(--ease);
+}
+.adm-tab-btn:hover{ color:var(--ts); }
+.adm-tab-btn.active{ color:var(--a); border-bottom-color:var(--a); }
+
+/* ── Homepage Management ── */
+.adm-hp-block{ margin-bottom:1.2rem; }
+.adm-panel-body{ padding:1.2rem 1.4rem 1.5rem; }
+.adm-hp-hint{ color:var(--tm); font-size:.82rem; margin-bottom:1rem; line-height:1.5; }
+.adm-hp-label{ display:block; font-family:var(--f-nav); font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; color:var(--tm); margin-bottom:.4rem; }
+.adm-hp-block select{
+  width:100%; background:var(--bg-card); border:1px solid var(--bf); color:var(--ts);
+  font-family:var(--f-body); font-size:.9rem; padding:.6rem .8rem; border-radius:var(--r1);
+}
+
+.adm-hp-toggles{ display:flex; flex-direction:column; gap:.9rem; }
+.adm-hp-toggle{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.adm-hp-toggle-label{ font-size:.9rem; color:var(--ts); }
+.adm-hp-toggle-desc{ font-size:.76rem; color:var(--tm); margin-top:.15rem; }
+.adm-hp-switch{
+  position:relative; flex:0 0 auto; width:42px; height:24px; border-radius:14px;
+  background:var(--bf); border:1px solid var(--bd); cursor:pointer; transition:background .25s var(--ease);
+}
+.adm-hp-switch::after{
+  content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%;
+  background:var(--tm); transition:transform .25s var(--ease), background .25s var(--ease);
+}
+.adm-hp-switch.on{ background:var(--as); border-color:var(--a); }
+.adm-hp-switch.on::after{ transform:translateX(18px); background:var(--a); }
+
+.adm-hp-picker-row{ margin-bottom:1rem; }
+.adm-hp-picklist{ display:flex; flex-direction:column; gap:.5rem; margin-top:1rem; }
+.adm-hp-pick-item{
+  display:flex; align-items:center; gap:.7rem; padding:.6rem .8rem;
+  background:var(--bg-card); border:1px solid var(--bf); border-radius:var(--r1);
+}
+.adm-hp-pick-thumb{ width:40px; height:40px; border-radius:4px; object-fit:cover; flex:0 0 auto; background:var(--bf); }
+.adm-hp-pick-title{ flex:1; font-size:.85rem; color:var(--ts); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.adm-hp-pick-btns{ display:flex; gap:.3rem; flex:0 0 auto; }
+.adm-hp-pick-btns button{
+  background:none; border:1px solid var(--bf); color:var(--tm); border-radius:5px; cursor:pointer;
+  width:26px; height:26px; font-size:.75rem; transition:border-color .2s var(--ease), color .2s var(--ease);
+}
+.adm-hp-pick-btns button:hover{ border-color:var(--a); color:var(--a); }
+.adm-hp-pick-empty{ color:var(--tm); font-size:.82rem; font-style:italic; }
+
+.adm-hp-save-row{ display:flex; align-items:center; justify-content:flex-end; gap:1rem; padding:1rem 0 2rem; }
+.adm-hp-save-status{ font-size:.8rem; color:var(--tm); }
+
 /* Access Denied page */
 #page-denied.active {
   min-height: 100vh; display: flex; flex-direction: column;
@@ -1752,6 +1997,29 @@ footer {
   transition:opacity .9s var(--ease), visibility .9s var(--ease);
 }
 #introReveal.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+
+/* ── Loading illustration: an old ink bottle slowly filling, and the
+   quill's nib catching a drop once it has — replaces a plain spinner. ── */
+.intro-ink{ margin-bottom:1.2rem; opacity:0; animation:introFadeUp .7s var(--ease) forwards; }
+.ink-fill{
+  transform-box: fill-box; transform-origin: bottom;
+  transform: scaleY(0);
+  animation: inkRise 1.7s var(--ease) forwards;
+  animation-delay: .5s;
+}
+@keyframes inkRise{ to{ transform: scaleY(1); } }
+.ink-drop{
+  opacity:0;
+  animation: dropAppear .5s var(--ease) forwards;
+  animation-delay: 2.2s;
+}
+@keyframes dropAppear{ from{ opacity:0; transform:translateY(-3px) scale(.6); } to{ opacity:1; transform:translateY(0) scale(1); } }
+.quill-shaft, .quill-barb, .quill-nib{ opacity:0; animation:introFadeUp .6s var(--ease) forwards; }
+.quill-barb:nth-of-type(2){ animation-delay:.06s; }
+.quill-barb:nth-of-type(3){ animation-delay:.12s; }
+.quill-barb:nth-of-type(4){ animation-delay:.18s; }
+.quill-nib{ animation-delay:.24s; }
+
 .intro-word{ display:flex; gap:.02em; overflow:hidden; }
 .intro-word span{
   font-family:'Bodoni Moda', var(--f-head); font-size:clamp(2rem,1.4rem + 5vw,5rem); color:var(--tp);
@@ -2151,6 +2419,29 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
 
 <!-- ✨ Intro reveal splash -->
 <div id="introReveal">
+  <div class="intro-ink" aria-hidden="true">
+    <svg viewBox="0 0 140 160" width="108" height="123">
+      <!-- Feather shaft, leaning down into the inkwell -->
+      <path class="quill-shaft" d="M118,14 C94,34 78,54 71,94" fill="none" stroke="var(--a)" stroke-width="2.4" stroke-linecap="round"/>
+      <!-- Feather barbs -->
+      <line class="quill-barb" x1="111" y1="21" x2="97" y2="14" stroke="var(--a)" stroke-width="2" stroke-linecap="round"/>
+      <line class="quill-barb" x1="102" y1="34" x2="86" y2="28" stroke="var(--a)" stroke-width="2" stroke-linecap="round"/>
+      <line class="quill-barb" x1="93" y1="49" x2="78" y2="45" stroke="var(--a)" stroke-width="2" stroke-linecap="round"/>
+      <line class="quill-barb" x1="85" y1="64" x2="71" y2="62" stroke="var(--a)" stroke-width="2" stroke-linecap="round"/>
+      <!-- Nib -->
+      <path class="quill-nib" d="M71,94 L66,100 L74,100 Z" fill="var(--a)"/>
+      <!-- Ink droplet, appears once the well has filled -->
+      <circle class="ink-drop" cx="70" cy="99" r="2.2" fill="#1a1015"/>
+      <!-- Inkwell -->
+      <path d="M40,110 Q40,100 50,100 L90,100 Q100,100 100,110 L100,140 Q100,150 90,150 L50,150 Q40,150 40,140 Z"
+            fill="none" stroke="var(--a)" stroke-width="2.4" opacity=".9"/>
+      <ellipse cx="70" cy="100" rx="30" ry="6.5" fill="none" stroke="var(--a)" stroke-width="2.4" opacity=".9"/>
+      <clipPath id="inkwellClip">
+        <path d="M42,108 Q42,102 50,102 L90,102 Q98,102 98,108 L98,138 Q98,148 90,148 L50,148 Q42,148 42,138 Z"/>
+      </clipPath>
+      <rect class="ink-fill" x="40" y="80" width="60" height="70" clip-path="url(#inkwellClip)" fill="#1a1015"/>
+    </svg>
+  </div>
   <div class="intro-word" id="introWord"></div>
   <div class="intro-sub">Thoughts <span style="opacity:.3">·</span> Stories <span style="opacity:.3">·</span> Research</div>
   <div class="intro-rule"></div>
@@ -2226,6 +2517,10 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
     <button class="btn btn-primary" onclick="goPage('blog')">Read the blog</button>
     <button class="btn btn-ghost"   onclick="goPage('about')">About this space</button>
   </div>
+
+  <!-- Admin-curated hero article, off by default — see Dashboard → Homepage -->
+  <div id="heroSpotlight" style="display:none"></div>
+
   <div class="hero-divider"></div>
 
   <!-- 🎡 Infinite Horizontal Gallery — luxury editorial marquee -->
@@ -2240,6 +2535,18 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       </button>
     </div>
+  </div>
+
+  <!-- Admin-curated Featured — Dashboard → Homepage → Featured Articles -->
+  <div class="home-recent" id="homeFeatured" style="display:none">
+    <p class="sec-label">Featured</p>
+    <div class="post-grid" id="homeFeaturedGrid"></div>
+  </div>
+
+  <!-- Trending — automatic (by engagement) or admin-curated manual picks -->
+  <div class="home-recent" id="homeTrending" style="display:none">
+    <p class="sec-label">Trending now</p>
+    <div class="post-grid" id="homeTrendingGrid"></div>
   </div>
 
   <div class="home-recent" id="homeRecent" style="display:none">
@@ -2277,7 +2584,7 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
 
   <div class="blog-toolbar" id="blogToolbar">
     <div class="bt-search">
-      <input id="blogSearch" type="text" placeholder="Search posts by title, author, category…" oninput="applyBlogFilters()">
+      <input id="blogSearch" type="text" placeholder="Search posts by title, author, category…" oninput="onSearchInput()">
     </div>
     <div class="bt-sorts" id="blogSortTabs">
       <button class="bt-tab active" data-sort="latest"   onclick="setBlogSort('latest')">Latest</button>
@@ -2286,13 +2593,49 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
       <button class="bt-tab" data-sort="liked"           onclick="setBlogSort('liked')">Most Liked</button>
       <button class="bt-tab" data-sort="pick"            onclick="setBlogSort('pick')">Editor's Pick</button>
     </div>
-    <div class="bt-row2">
-      <select id="blogCategory" onchange="applyBlogFilters()"><option value="">All categories</option></select>
-      <select id="blogArchive"  onchange="applyBlogFilters()"><option value="">All time</option></select>
-      <button class="btn btn-ghost btn-sm" onclick="surpriseMe()"><span>🎲</span> Surprise me</button>
-      <button class="btn btn-ghost btn-sm" id="masonryToggleBtn" onclick="toggleMasonryView()"><span>🎞</span> Gallery</button>
+    <!-- Library bookshelf — replaces category pills. Reuses the exact same
+         _blogCategory filter state and setTagFilter-style logic as before;
+         only the UI changed. -->
+    <div class="lib-shelf-wrap" id="libShelfWrap">
+      <div class="lib-shelf-props" aria-hidden="true">
+        <div class="lib-prop lib-prop-candle">
+          <div class="lib-candle-flame"></div>
+          <div class="lib-candle-body"></div>
+        </div>
+        <div class="lib-prop lib-prop-lantern">
+          <div class="lib-lantern-glow"></div>
+          <svg viewBox="0 0 40 56" width="26" height="36">
+            <path d="M8,10 L32,10 L28,44 L12,44 Z" fill="none" stroke="var(--a)" stroke-width="1.6" opacity=".8"/>
+            <line x1="20" y1="2" x2="20" y2="10" stroke="var(--a)" stroke-width="1.6" opacity=".8"/>
+            <ellipse cx="20" cy="10" rx="12" ry="2.4" fill="none" stroke="var(--a)" stroke-width="1.4" opacity=".8"/>
+            <rect x="14" y="16" width="12" height="20" fill="#f5c968" opacity=".18"/>
+          </svg>
+        </div>
+        <div class="lib-prop lib-prop-globe">
+          <svg viewBox="0 0 44 44" width="34" height="34">
+            <circle cx="22" cy="20" r="15" fill="none" stroke="var(--a)" stroke-width="1.5" opacity=".8"/>
+            <ellipse cx="22" cy="20" rx="15" ry="6" fill="none" stroke="var(--a)" stroke-width="1" opacity=".55"/>
+            <ellipse cx="22" cy="20" rx="6" ry="15" fill="none" stroke="var(--a)" stroke-width="1" opacity=".55"/>
+            <line x1="22" y1="35" x2="22" y2="42" stroke="var(--a)" stroke-width="1.6" opacity=".8"/>
+            <line x1="12" y1="42" x2="32" y2="42" stroke="var(--a)" stroke-width="1.6" opacity=".8"/>
+          </svg>
+        </div>
+      </div>
+      <div class="lib-shelf" id="libShelf" role="list" aria-label="Browse by category"></div>
+      <div class="lib-shelf-board"><div class="lib-shelf-board-top"></div></div>
     </div>
-    <div class="bt-tags" id="blogTagCloud"></div>
+
+    <div class="lib-carousel-wrap" id="libCarouselWrap" style="display:none">
+      <div class="lib-carousel-hdr">
+        <span class="lib-carousel-title" id="libCarouselTitle"></span>
+        <button class="lib-carousel-close" onclick="reshelveBook()" aria-label="Close and return to the full shelf">✕ Reshelve</button>
+      </div>
+      <div class="lib-carousel-scroller">
+        <button class="lib-car-nav lib-car-prev" onclick="shelfCarouselScroll(-1)" aria-label="Previous articles">‹</button>
+        <div class="lib-carousel" id="libCarousel" tabindex="0"></div>
+        <button class="lib-car-nav lib-car-next" onclick="shelfCarouselScroll(1)" aria-label="Next articles">›</button>
+      </div>
+    </div>
   </div>
 
   <!-- Masonry gallery view -->
@@ -2392,6 +2735,10 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
   </div>
 
   <!-- POSTS -->
+  <div class="search-status" id="blogSearchStatus">
+    <span class="search-status-glyph">✦</span>
+    <span>Searching the archives…</span>
+  </div>
   <div class="posts-list" id="postsList">
     <div class="empty-state" id="emptyState">No posts yet — check back soon</div>
   </div>
@@ -2609,9 +2956,15 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
       <h1>Client Dashboard</h1>
       <p class="adm-meta" id="admLastRefresh">Manage client access &amp; permissions</p>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="renderAdminDashboard()">↻ Refresh</button>
+    <button class="btn btn-ghost btn-sm" onclick="renderAdminDashboard(); renderHomepageAdmin();">↻ Refresh</button>
   </div>
 
+  <div class="adm-tabs">
+    <button class="adm-tab-btn active" id="admTabBtnUsers" onclick="setAdminTab('users',this)">Users</button>
+    <button class="adm-tab-btn" id="admTabBtnHomepage" onclick="setAdminTab('homepage',this)">Homepage</button>
+  </div>
+
+  <div class="adm-tab-panel" id="admTabUsers">
   <!-- Stat cards -->
   <div class="adm-stats" id="admStats">
     <div class="stat-card s-accent">
@@ -2658,6 +3011,84 @@ mark.search-hit{ background:rgba(201,168,124,.35); color:var(--ah); padding:0 2p
           <tr><td colspan="5" class="adm-empty">No clients yet.</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+  </div>
+
+  <!-- ══════ Homepage Management ══════ -->
+  <div class="adm-tab-panel" id="admTabHomepage" style="display:none">
+
+    <div class="adm-table-wrap adm-hp-block">
+      <div class="adm-table-header"><span class="adm-table-title">Homepage sections</span></div>
+      <div class="adm-panel-body">
+        <p class="adm-hp-hint">Turn a section off and it disappears completely from the homepage — no gap left behind.</p>
+        <div class="adm-hp-toggles" id="hpSectionToggles"></div>
+      </div>
+    </div>
+
+    <div class="adm-table-wrap adm-hp-block">
+      <div class="adm-table-header"><span class="adm-table-title">Hero spotlight</span></div>
+      <div class="adm-panel-body">
+        <p class="adm-hp-hint">An optional single article shown just below the welcome banner. Off by default.</p>
+        <label class="adm-hp-label">Choose article by</label>
+        <select id="hpHeroMode" onchange="onHpHeroModeChange()">
+          <option value="latest">Latest published</option>
+          <option value="mostViewed">Most viewed</option>
+          <option value="random">Random</option>
+          <option value="featured">Editor's Featured pick</option>
+          <option value="manual">Manually choose…</option>
+        </select>
+        <div id="hpHeroManualWrap" style="display:none; margin-top:.8rem;">
+          <label class="adm-hp-label">Article</label>
+          <select id="hpHeroManualPost"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="adm-table-wrap adm-hp-block">
+      <div class="adm-table-header"><span class="adm-table-title">Featured articles</span></div>
+      <div class="adm-panel-body">
+        <p class="adm-hp-hint">Hand-pick which articles appear in the homepage Featured row, in this order.</p>
+        <div class="adm-hp-picker-row">
+          <div>
+            <label class="adm-hp-label">Add an article</label>
+            <select id="hpFeaturedAdd" onchange="hpAddFeatured()"><option value="">Choose an article…</option></select>
+          </div>
+        </div>
+        <div class="adm-hp-picklist" id="hpFeaturedList"></div>
+      </div>
+    </div>
+
+    <div class="adm-table-wrap adm-hp-block">
+      <div class="adm-table-header"><span class="adm-table-title">Trending</span></div>
+      <div class="adm-panel-body">
+        <label class="adm-hp-label">Mode</label>
+        <select id="hpTrendingMode" onchange="onHpTrendingModeChange()">
+          <option value="auto">Automatic — ranked by likes &amp; views</option>
+          <option value="manual">Manual — I'll pick them</option>
+        </select>
+
+        <div id="hpTrendingAutoWrap" style="margin-top:.8rem;">
+          <label class="adm-hp-label">Time range</label>
+          <select id="hpTrendingRange">
+            <option value="today">Today</option>
+            <option value="week">This week</option>
+            <option value="month">This month</option>
+            <option value="all">All time</option>
+          </select>
+        </div>
+
+        <div id="hpTrendingManualWrap" style="display:none; margin-top:.8rem;">
+          <label class="adm-hp-label">Add an article</label>
+          <select id="hpTrendingAdd" onchange="hpAddTrending()"><option value="">Choose an article…</option></select>
+          <div class="adm-hp-picklist" id="hpTrendingList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="adm-hp-save-row">
+      <span class="adm-hp-save-status" id="hpSaveStatus"></span>
+      <button class="btn btn-primary" onclick="saveHomepageSettings()">Save homepage settings</button>
     </div>
   </div>
 </div>
@@ -2786,7 +3217,7 @@ async function fsGetAll() {
     // users are never returned by the public db endpoint anymore —
     // loadUsers()/saveUsers() talk to admin.js instead, only when an
     // admin is signed in and viewing the dashboard.
-    return { posts: d.posts||[], eng: d.eng||{} };
+    return { posts: d.posts||[], eng: d.eng||{}, homepage: d.homepage||DEFAULT_HOMEPAGE };
   } catch(e) {
     console.error('Cloud read error:', e.message);
     throw e;
@@ -2819,9 +3250,31 @@ async function fsSetEngagement(eng) {
   });
   if (!r.ok) { const t=await r.text(); throw new Error(`Engagement save ${r.status}: ${t}`); }
 }
+
+/* Homepage settings (section toggles, hero mode, curated Featured/Trending
+   picks) — admin only, goes through save.js's `type:'homepage'` action. */
+async function fsSetHomepage(homepage) {
+  const r = await fetch(SAVE_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ type: 'homepage', homepage }),
+  });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.error || `Homepage save ${r.status}`);
+  return d.homepage;
+}
+
 /* ── In-memory cache ── */
 let _cache = null;
-const EMPTY_DB = { posts:[], eng:{} }; // users no longer live in the public cache
+// Mirrors the backend's default exactly — heroSpotlight starts OFF so the
+// existing homepage looks and behaves identically until an admin opts in.
+const DEFAULT_HOMEPAGE = {
+  sections: { heroSpotlight:false, featured:true, trending:true, recent:true, gallery:true },
+  hero: { mode:'latest', postId:null },
+  featured: { postIds:[] },
+  trending: { mode:'auto', postIds:[], range:'week' },
+};
+const EMPTY_DB = { posts:[], eng:{}, homepage: DEFAULT_HOMEPAGE }; // users no longer live in the public cache
 
 /* ── Strip/compress thumbnails before cloud write (Firestore has a 1MB doc limit) ── */
 async function stripThumbnails(posts) {
@@ -2896,9 +3349,12 @@ function mergeThumbnails(cloudPosts) {
 }
 
 function loadFromLocal() {
+  let homepage = DEFAULT_HOMEPAGE;
+  try { homepage = JSON.parse(localStorage.getItem('nct_homepage') || 'null') || DEFAULT_HOMEPAGE; } catch(e) {}
   return {
     posts: JSON.parse(localStorage.getItem('nct_posts') || '[]'),
     eng:   JSON.parse(localStorage.getItem('nct_eng')   || '{}'),
+    homepage,
   };
 }
 
@@ -2906,8 +3362,11 @@ function saveToLocal(db) {
   try {
     localStorage.setItem('nct_posts', JSON.stringify(db.posts));
     localStorage.setItem('nct_eng',   JSON.stringify(db.eng));
+    localStorage.setItem('nct_homepage', JSON.stringify(db.homepage || DEFAULT_HOMEPAGE));
   } catch(e) {}
 }
+
+function loadHomepage(){ return (_cache||EMPTY_DB).homepage || DEFAULT_HOMEPAGE; }
 
 async function readDB() {
   if (_cache) return _cache;
@@ -3129,13 +3588,14 @@ async function initDBCloudSync() {
         const db = await fsGetAll();
         if (db) {
           const mergedPosts = mergeThumbnails(db.posts || []);
-          _cache = { posts: mergedPosts, eng: db.eng||{} };
+          _cache = { posts: mergedPosts, eng: db.eng||{}, homepage: db.homepage||DEFAULT_HOMEPAGE };
           saveToLocal(_cache);
           clearTimeout(_writeTimer);
           _dirty = false;
           _cloudSynced = true;
           renderPosts();
           renderHomeGrid();
+          renderHomeCuration();
           updateNav();
         }
         break; // success — stop retrying
@@ -3326,13 +3786,156 @@ function doLogout() {
 }
 
 /* ══════════════════════════════════════
-   ADMIN DASHBOARD
-   ─────────────────────────────────────
-   Users live entirely behind admin.js now. renderAdminDashboard() is
-   async and calls loadUsersRemote(), which sends the admin's session
-   token in the Authorization header; admin.js verifies that token and
-   never returns password hashes.
+   ADMIN: HOMEPAGE MANAGEMENT
+   Edits build up in _hpDraft (a working copy) and only reach the
+   server when "Save homepage settings" is clicked — same pattern as
+   the post editor. renderHomepageAdmin() loads a fresh draft from the
+   server; refreshHpUI() just re-paints from whatever is already in
+   _hpDraft, so add/remove/reorder never discards unsaved edits.
 ══════════════════════════════════════ */
+let _hpDraft = null;
+
+function setAdminTab(tab, btn){
+  document.querySelectorAll('.adm-tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('admTabUsers').style.display = tab==='users' ? '' : 'none';
+  document.getElementById('admTabHomepage').style.display = tab==='homepage' ? '' : 'none';
+  if(tab==='homepage') renderHomepageAdmin();
+}
+
+function renderHomepageAdmin(){
+  if(!curUser || curUser.role!=='admin') return;
+  _hpDraft = JSON.parse(JSON.stringify(loadHomepage()));
+  refreshHpUI();
+}
+
+function refreshHpUI(){
+  if(!_hpDraft) return;
+  const posts = loadPosts();
+
+  const toggles = [
+    { key:'heroSpotlight', label:'Hero spotlight',   desc:'A single admin-picked article shown below the welcome banner.' },
+    { key:'featured',      label:'Featured articles', desc:'Hand-picked row of articles.' },
+    { key:'trending',      label:'Trending',          desc:'Automatic or manual "trending now" row.' },
+    { key:'recent',        label:'Recent writing',    desc:'The latest published articles.' },
+    { key:'gallery',       label:'Archive gallery',   desc:'The scrolling "From the archive" strip.' },
+  ];
+  document.getElementById('hpSectionToggles').innerHTML = toggles.map(t => `
+    <div class="adm-hp-toggle">
+      <div>
+        <div class="adm-hp-toggle-label">${t.label}</div>
+        <div class="adm-hp-toggle-desc">${t.desc}</div>
+      </div>
+      <div class="adm-hp-switch ${_hpDraft.sections[t.key] ? 'on' : ''}" onclick="hpToggleSection('${t.key}', this)" role="switch" aria-checked="${!!_hpDraft.sections[t.key]}"></div>
+    </div>
+  `).join('');
+
+  document.getElementById('hpHeroMode').value = _hpDraft.hero.mode;
+  onHpHeroModeChange(true);
+  const heroSelect = document.getElementById('hpHeroManualPost');
+  heroSelect.innerHTML = posts.map(p=>`<option value="${p.id}">${esc(p.title)}</option>`).join('');
+  if(_hpDraft.hero.postId != null) heroSelect.value = _hpDraft.hero.postId;
+
+  const featAdd = document.getElementById('hpFeaturedAdd');
+  featAdd.innerHTML = `<option value="">Choose an article…</option>` +
+    posts.filter(p=>!_hpDraft.featured.postIds.map(String).includes(String(p.id)))
+         .map(p=>`<option value="${p.id}">${esc(p.title)}</option>`).join('');
+  renderHpPicklist('hpFeaturedList', _hpDraft.featured.postIds, 'featured');
+
+  document.getElementById('hpTrendingMode').value = _hpDraft.trending.mode;
+  document.getElementById('hpTrendingRange').value = _hpDraft.trending.range;
+  onHpTrendingModeChange(true);
+  const trendAdd = document.getElementById('hpTrendingAdd');
+  trendAdd.innerHTML = `<option value="">Choose an article…</option>` +
+    posts.filter(p=>!_hpDraft.trending.postIds.map(String).includes(String(p.id)))
+         .map(p=>`<option value="${p.id}">${esc(p.title)}</option>`).join('');
+  renderHpPicklist('hpTrendingList', _hpDraft.trending.postIds, 'trending');
+}
+
+function hpToggleSection(key, el){
+  _hpDraft.sections[key] = !_hpDraft.sections[key];
+  el.classList.toggle('on', _hpDraft.sections[key]);
+  el.setAttribute('aria-checked', String(_hpDraft.sections[key]));
+}
+
+function onHpHeroModeChange(skipDraftUpdate){
+  const mode = document.getElementById('hpHeroMode').value;
+  if(!skipDraftUpdate) _hpDraft.hero.mode = mode;
+  document.getElementById('hpHeroManualWrap').style.display = mode==='manual' ? '' : 'none';
+}
+
+function onHpTrendingModeChange(skipDraftUpdate){
+  const mode = document.getElementById('hpTrendingMode').value;
+  if(!skipDraftUpdate) _hpDraft.trending.mode = mode;
+  document.getElementById('hpTrendingAutoWrap').style.display = mode==='auto' ? '' : 'none';
+  document.getElementById('hpTrendingManualWrap').style.display = mode==='manual' ? '' : 'none';
+}
+
+function renderHpPicklist(elId, ids, kind){
+  const el = document.getElementById(elId);
+  const posts = loadPosts();
+  if(!ids.length){ el.innerHTML = `<div class="adm-hp-pick-empty">No articles chosen yet.</div>`; return; }
+  el.innerHTML = ids.map((id,i)=>{
+    const p = posts.find(x=>String(x.id)===String(id));
+    if(!p) return '';
+    return `
+      <div class="adm-hp-pick-item">
+        ${p.thumbnail ? `<img class="adm-hp-pick-thumb" src="${p.thumbnail}">` : `<div class="adm-hp-pick-thumb"></div>`}
+        <span class="adm-hp-pick-title">${esc(p.title)}</span>
+        <div class="adm-hp-pick-btns">
+          <button onclick="hpMove('${kind}',${i},-1)" ${i===0?'disabled':''} title="Move up">↑</button>
+          <button onclick="hpMove('${kind}',${i},1)" ${i===ids.length-1?'disabled':''} title="Move down">↓</button>
+          <button onclick="hpRemove('${kind}','${id}')" title="Remove">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function hpAddFeatured(){
+  const sel = document.getElementById('hpFeaturedAdd');
+  if(!sel.value) return;
+  _hpDraft.featured.postIds.push(sel.value);
+  refreshHpUI();
+}
+function hpAddTrending(){
+  const sel = document.getElementById('hpTrendingAdd');
+  if(!sel.value) return;
+  _hpDraft.trending.postIds.push(sel.value);
+  refreshHpUI();
+}
+function hpRemove(kind, id){
+  _hpDraft[kind].postIds = _hpDraft[kind].postIds.filter(x=>String(x)!==String(id));
+  refreshHpUI();
+}
+function hpMove(kind, i, dir){
+  const arr = _hpDraft[kind].postIds;
+  const j = i+dir;
+  if(j<0||j>=arr.length) return;
+  [arr[i],arr[j]] = [arr[j],arr[i]];
+  refreshHpUI();
+}
+
+async function saveHomepageSettings(){
+  if(!_hpDraft) return;
+  _hpDraft.hero.mode = document.getElementById('hpHeroMode').value;
+  _hpDraft.hero.postId = _hpDraft.hero.mode==='manual' ? document.getElementById('hpHeroManualPost').value : null;
+  _hpDraft.trending.mode = document.getElementById('hpTrendingMode').value;
+  _hpDraft.trending.range = document.getElementById('hpTrendingRange').value;
+
+  const status = document.getElementById('hpSaveStatus');
+  status.textContent = 'Saving…';
+  try {
+    const saved = await fsSetHomepage(_hpDraft);
+    _cache.homepage = saved;
+    saveToLocal(_cache);
+    renderHomeCuration();
+    status.textContent = 'Saved ✓';
+    setTimeout(()=>{ if(status.textContent==='Saved ✓') status.textContent=''; }, 2500);
+  } catch(e) {
+    console.error('Homepage save failed:', e);
+    status.textContent = '⚠ ' + (e.message || 'Save failed');
+  }
+}
 
 let _admFilter = 'all'; // current filter: 'all' | 'approved' | 'denied' | 'pending'
 
@@ -4587,22 +5190,177 @@ function populateBlogControls(posts){
       months.map(m=>`<option value="${esc(m)}" ${m===cur?'selected':''}>${esc(m)}</option>`).join('');
     syncLuxeTrigger(arSel);
   }
-  const cloud = document.getElementById('blogTagCloud');
-  if (cloud) {
-    const freq = {};
-    posts.forEach(p=>{ const t=p.tag||'Essay'; freq[t]=(freq[t]||0)+1; });
-    const top = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8);
-    cloud.innerHTML = top.map(([t])=>
-      `<button class="tag-pill ${_blogCategory===t?'active':''}" onclick="setTagFilter('${t.replace(/'/g,"\\'")}')">${esc(t)}</button>`
-    ).join('');
-  }
+  renderLibraryShelf(posts);
 }
+
+/* ══════════════════════════════════════
+   LIBRARY BOOKSHELF — category navigation
+   Reuses the exact same _blogCategory state and post-filtering logic
+   that renderPosts() already relies on; this only replaces the UI.
+══════════════════════════════════════ */
+let _shelfSelectedCat = '';
+let _shelfBooksCache = [];
+
+// A handful of muted leather tones so books don't look identical —
+// picked deterministically per category name so it's stable across renders.
+const LIB_LEATHER = ['#241a16','#2b1d16','#1e1a1c','#231610','#1a1e22','#221a24'];
+function _leatherFor(str){
+  let h=0; for(let i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0;
+  return LIB_LEATHER[h % LIB_LEATHER.length];
+}
+function _heightFor(str){
+  let h=0; for(let i=0;i<str.length;i++) h=(h*17+str.charCodeAt(i))>>>0;
+  return 128 + (h % 34); // 128–162px — believable uneven shelf heights
+}
+
+function renderLibraryShelf(posts){
+  const shelf = document.getElementById('libShelf');
+  if(!shelf) return;
+
+  const freq = {};
+  posts.forEach(p=>{ const t=p.tag||'Essay'; freq[t]=(freq[t]||0)+1; });
+  const cats = Object.keys(freq).sort((a,b)=>a.localeCompare(b));
+  _shelfBooksCache = cats;
+
+  if(cats.length===0){ shelf.innerHTML=''; return; }
+
+  shelf.innerHTML = cats.map(cat=>{
+    const selected = cat === _shelfSelectedCat;
+    return `<button type="button" class="lib-book${selected?' selected':''}"
+      style="--book-leather:${_leatherFor(cat)}; --book-h:${_heightFor(cat)}px;"
+      data-cat="${esc(cat)}" role="listitem"
+      aria-pressed="${selected}" aria-label="${esc(cat)}, ${freq[cat]} article${freq[cat]===1?'':'s'}"
+      onclick="selectShelfBook('${cat.replace(/'/g,"\\'")}', this)">
+      <span class="lib-book-spine-title">${esc(cat)}</span>
+      <span class="lib-book-count">${freq[cat]}</span>
+    </button>`;
+  }).join('');
+}
+
+function selectShelfBook(cat, btn){
+  const already = _shelfSelectedCat === cat;
+  document.querySelectorAll('.lib-book').forEach(b=>{
+    b.classList.remove('selected'); b.setAttribute('aria-pressed','false');
+  });
+
+  if(already){ reshelveBook(); return; }
+
+  _shelfSelectedCat = cat;
+  if(btn){ btn.classList.add('selected'); btn.setAttribute('aria-pressed','true'); }
+
+  const wrap  = document.getElementById('libCarouselWrap');
+  const title = document.getElementById('libCarouselTitle');
+  const car   = document.getElementById('libCarousel');
+  const list  = document.getElementById('postsList');
+  if(!wrap || !car) return;
+
+  const canWrite = curUser && (curUser.role==='admin'||curUser.role==='approved');
+  const isAdmin  = curUser && curUser.role==='admin';
+  const posts = loadPosts()
+    .filter(p=>(p.tag||'Essay')===cat)
+    .sort((a,b)=> postTs(b) - postTs(a));
+
+  title.textContent = `${cat} — ${posts.length} article${posts.length===1?'':'s'}`;
+  car.innerHTML = posts.map(p=>`<div class="lib-carousel-card">${buildPostHTML(p,canWrite,isAdmin)}</div>`).join('');
+  car.scrollLeft = 0;
+
+  // Fade the shelved list out, fade the carousel in — shelf itself never moves.
+  if(list) list.style.display = 'none';
+  wrap.style.display = '';
+  wrap.classList.remove('lib-car-in'); void wrap.offsetWidth; wrap.classList.add('lib-car-in');
+}
+
+function reshelveBook(){
+  _shelfSelectedCat = '';
+  document.querySelectorAll('.lib-book').forEach(b=>{
+    b.classList.remove('selected'); b.setAttribute('aria-pressed','false');
+  });
+  const wrap = document.getElementById('libCarouselWrap');
+  const list = document.getElementById('postsList');
+  if(wrap) wrap.style.display = 'none';
+  if(list) list.style.display = '';
+}
+
+function shelfCarouselScroll(dir){
+  const car = document.getElementById('libCarousel');
+  if(!car) return;
+  const card = car.querySelector('.lib-carousel-card');
+  const step = card ? card.getBoundingClientRect().width + 22 : 320;
+  car.scrollBy({ left: dir*step*2, behavior:'smooth' });
+}
+
+function wireLibCarousel(){
+  const car = document.getElementById('libCarousel');
+  if(!car || car.dataset.wired) return;
+  car.dataset.wired = '1';
+
+  // Wheel: vertical mouse-wheel scroll pans the carousel horizontally.
+  car.addEventListener('wheel', e=>{
+    if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){
+      e.preventDefault();
+      car.scrollLeft += e.deltaY;
+    }
+  }, { passive:false });
+
+  // Mouse drag-to-scroll (touch/trackpad already scroll natively).
+  let dragging=false, startX=0, startScroll=0;
+  car.addEventListener('mousedown', e=>{
+    dragging=true; startX=e.clientX; startScroll=car.scrollLeft; car.classList.add('dragging');
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    car.scrollLeft = startScroll - (e.clientX - startX);
+  });
+  window.addEventListener('mouseup', ()=>{ dragging=false; car.classList.remove('dragging'); });
+
+  // Keyboard ← → navigation when the carousel has focus.
+  car.addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight'){ e.preventDefault(); shelfCarouselScroll(1); }
+    else if(e.key==='ArrowLeft'){ e.preventDefault(); shelfCarouselScroll(-1); }
+  });
+}
+wireLibCarousel();
 
 function setBlogSort(s){
   _blogSort = s;
   document.querySelectorAll('.bt-tab').forEach(b=>b.classList.toggle('active', b.dataset.sort===s));
+  if(_shelfSelectedCat) reshelveBook();
   renderPosts();
 }
+let _searchDebounce = null;
+function onSearchInput(){
+  const raw = (document.getElementById('blogSearch')?.value || '').trim().toLowerCase();
+  clearTimeout(_searchDebounce);
+  if(_shelfSelectedCat) reshelveBook();
+
+  const list   = document.getElementById('postsList');
+  const status = document.getElementById('blogSearchStatus');
+
+  if(!raw){
+    // Cleared the box — snap back to the full list immediately, no ceremony.
+    if(status) status.classList.remove('show');
+    if(list) list.classList.remove('searching');
+    _blogSearch = '';
+    renderPosts();
+    return;
+  }
+
+  if(list) list.classList.add('searching');
+  if(status) status.classList.add('show');
+
+  _searchDebounce = setTimeout(()=>{
+    _blogSearch = raw;
+    renderPosts();
+    if(status) status.classList.remove('show');
+    if(list){
+      list.classList.remove('searching');
+      list.classList.remove('results-fade');
+      void list.offsetWidth; // restart the fade-in animation
+      list.classList.add('results-fade');
+    }
+  }, 380);
+}
+
 function applyBlogFilters(){
   _blogSearch   = (document.getElementById('blogSearch')?.value || '').trim().toLowerCase();
   _blogCategory = document.getElementById('blogCategory')?.value || '';
@@ -5396,39 +6154,146 @@ function fmtTime(d){
 /* ══════════════════════════════════════
    HOME GRID
 ══════════════════════════════════════ */
+function buildHomeCardHTML(p, pageCtx){
+  const key=String(p.id);
+  const eng=getEng(key)[key];
+  const bodyImg = p.body.match(/<img[^>]+src="([^"]+)"/);
+  const thumbSrc = p.thumbnail || (bodyImg ? bodyImg[1] : null);
+  const thumb = thumbSrc
+    ? `<img src="${thumbSrc}" alt="${esc(p.title)}">`
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:.3">
+         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+       </div>`;
+  return `
+  <div class="post-card" onclick="openPost(${p.id},'${pageCtx||'home'}')" data-cursor-label="Read →">
+    <div class="card-thumb">
+      <span class="card-float-badge">${esc(p.tag||'Essay')}</span>
+      ${thumb}
+    </div>
+    <div class="card-body">
+      <div class="card-tag">${esc(p.tag)}</div>
+      <div class="card-title">${esc(p.title)}</div>
+      <div class="card-excerpt">${p.subtitle ? esc(p.subtitle) : strip(p.body).slice(0,115)+'…'}</div>
+      <div class="card-meta">
+        <span>${esc(p.author)}</span>
+        <span>♥ ${eng.likes} · 👁 ${eng.views}</span>
+      </div>
+      <div class="card-readmore">Read more <span class="arrow">→</span></div>
+    </div>
+  </div>`;
+}
+
 function renderHomeGrid(){
   const posts=loadPosts();
   const sec=document.getElementById('homeRecent');
+  renderHomeCuration();
   if(posts.length===0){sec.style.display='none';return;}
+  const hp = loadHomepage();
+  if(!hp.sections.recent){ sec.style.display='none'; return; }
   sec.style.display='block';
-  document.getElementById('homeGrid').innerHTML=posts.slice(0,3).map(p=>{
-    const key=String(p.id);
-    const eng=getEng(key)[key];
-    const bodyImg = p.body.match(/<img[^>]+src="([^"]+)"/);
-    const thumbSrc = p.thumbnail || (bodyImg ? bodyImg[1] : null);
-    const thumb = thumbSrc
-      ? `<img src="${thumbSrc}" alt="${esc(p.title)}">`
-      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:.3">
-           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-         </div>`;
-    return `
-    <div class="post-card" onclick="openPost(${p.id},'home')" data-cursor-label="Read →">
-      <div class="card-thumb">
-        <span class="card-float-badge">${esc(p.tag||'Essay')}</span>
-        ${thumb}
-      </div>
-      <div class="card-body">
-        <div class="card-tag">${esc(p.tag)}</div>
-        <div class="card-title">${esc(p.title)}</div>
-        <div class="card-excerpt">${p.subtitle ? esc(p.subtitle) : strip(p.body).slice(0,115)+'…'}</div>
-        <div class="card-meta">
-          <span>${esc(p.author)}</span>
-          <span>♥ ${eng.likes} · 👁 ${eng.views}</span>
-        </div>
-        <div class="card-readmore">Read more <span class="arrow">→</span></div>
+  document.getElementById('homeGrid').innerHTML=posts.slice(0,3).map(p=>buildHomeCardHTML(p,'home')).join('');
+}
+
+/* ══════════════════════════════════════
+   HOMEPAGE CURATION — Hero Spotlight, Featured, Trending
+   Admin-managed via Dashboard → Homepage. Everything here reads from
+   loadHomepage() (synced from db.homepage) and hides completely (no
+   blank space) when a section is off or has nothing to show.
+══════════════════════════════════════ */
+function engScore(p){
+  const key=String(p.id);
+  const e=getEng(key)[key];
+  return (e.likes*2)+e.views;
+}
+
+function computeTrendingPosts(range, limit){
+  const now = Date.now();
+  const windowMs = { today:864e5, week:6048e5, month:2592e6, all:Infinity }[range] ?? Infinity;
+  return loadPosts()
+    .filter(p => windowMs===Infinity || (now - postTs(p)) <= windowMs)
+    .filter(p => engScore(p) > 0)
+    .sort((a,b)=> engScore(b)-engScore(a))
+    .slice(0, limit);
+}
+
+function pickHeroPost(hp){
+  const posts = loadPosts();
+  if(!posts.length) return null;
+  if(hp.hero.mode==='manual' && hp.hero.postId!=null){
+    const p = posts.find(x=>String(x.id)===String(hp.hero.postId));
+    if(p) return p;
+  }
+  if(hp.hero.mode==='featured'){
+    const p = posts.find(x=>x.featured);
+    if(p) return p;
+  }
+  if(hp.hero.mode==='mostViewed'){
+    return [...posts].sort((a,b)=> engScore(b)-engScore(a))[0] || posts[0];
+  }
+  if(hp.hero.mode==='random'){
+    return posts[Math.floor(Math.random()*posts.length)];
+  }
+  // 'latest' (default fallback too)
+  return [...posts].sort((a,b)=> postTs(b)-postTs(a))[0];
+}
+
+function renderHomeCuration(){
+  const hp = loadHomepage();
+  renderHeroSpotlight(hp);
+  renderHomeFeatured(hp);
+  renderHomeTrending(hp);
+  renderHomeGallery();
+}
+
+function renderHeroSpotlight(hp){
+  const el = document.getElementById('heroSpotlight');
+  if(!el) return;
+  if(!hp.sections.heroSpotlight){ el.style.display='none'; el.innerHTML=''; return; }
+  const p = pickHeroPost(hp);
+  if(!p){ el.style.display='none'; el.innerHTML=''; return; }
+  const thumb = p.thumbnail ? `<img src="${p.thumbnail}" alt="${esc(p.title)}">` : '';
+  el.innerHTML = `
+    <div class="featured-hero" onclick="openPost(${p.id},'home')" data-cursor-label="Read →">
+      ${thumb}
+      <div class="featured-hero-body">
+        <div class="featured-hero-kicker">${esc(p.tag||'Essay')}</div>
+        <div class="featured-hero-title">${esc(p.title)}</div>
+        ${p.subtitle ? `<div class="featured-hero-sub">${esc(p.subtitle)}</div>` : ''}
       </div>
     </div>`;
-  }).join('');
+  el.style.display='';
+}
+
+function renderHomeFeatured(hp){
+  const sec = document.getElementById('homeFeatured');
+  const grid = document.getElementById('homeFeaturedGrid');
+  if(!sec || !grid) return;
+  if(!hp.sections.featured || !hp.featured.postIds.length){ sec.style.display='none'; return; }
+  const posts = loadPosts();
+  const picked = hp.featured.postIds
+    .map(id=>posts.find(p=>String(p.id)===String(id)))
+    .filter(Boolean);
+  if(!picked.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  grid.innerHTML = picked.map(p=>buildHomeCardHTML(p,'home')).join('');
+}
+
+function renderHomeTrending(hp){
+  const sec = document.getElementById('homeTrending');
+  const grid = document.getElementById('homeTrendingGrid');
+  if(!sec || !grid) return;
+  if(!hp.sections.trending){ sec.style.display='none'; return; }
+
+  const posts = loadPosts();
+  let picked;
+  if(hp.trending.mode==='manual'){
+    picked = hp.trending.postIds.map(id=>posts.find(p=>String(p.id)===String(id))).filter(Boolean);
+  } else {
+    picked = computeTrendingPosts(hp.trending.range, 6);
+  }
+  if(!picked.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  grid.innerHTML = picked.map(p=>buildHomeCardHTML(p,'home')).join('');
 }
 
 /* ══════════════════════════════════════
@@ -6019,6 +6884,7 @@ function renderHomeGallery(){
   const wrap  = document.getElementById('noctGalleryWrap');
   const track = document.getElementById('noctGalleryTrack');
   if(!wrap || !track) return;
+  if(!loadHomepage().sections.gallery){ wrap.style.display = 'none'; return; }
 
   const allPosts = loadPosts();
   const curated = allPosts.filter(p=>p.gallery).sort((a,b)=> (b.galleryTs||0)-(a.galleryTs||0));
