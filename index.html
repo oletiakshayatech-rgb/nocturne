@@ -3178,7 +3178,7 @@ async function fsSetPosts(posts) {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ type: 'posts', posts: postsForCloud }),
   });
-  if (!r.ok) { const t=await r.text(); throw new Error(`Post save ${r.status}: ${t}`); }
+  if (!r.ok) { const t=await r.text(); const err=new Error(`Post save ${r.status}: ${t}`); err.status=r.status; throw err; }
   const result = await r.json();
   console.log(`Cloud write OK: ${result.posts} posts saved`);
 }
@@ -3205,7 +3205,7 @@ async function fsSetHomepage(homepage) {
     body: JSON.stringify({ type: 'homepage', homepage }),
   });
   const d = await r.json().catch(()=>({}));
-  if (!r.ok) throw new Error(d.error || `Homepage save ${r.status}`);
+  if (!r.ok) { const err = new Error(d.error || `Homepage save ${r.status}`); err.status = r.status; throw err; }
   return d.homepage;
 }
 
@@ -3387,6 +3387,11 @@ async function writeNow() {
     setTimeout(()=>showSaveIndicator(''), 2000);
   } catch(e) {
     console.error('Post save failed:', e);
+    if (e.status === 401) {
+      showSaveIndicator('');
+      handleSessionExpiry();
+      return;
+    }
     showSaveIndicator('⚠ Save failed — check console');
     setTimeout(()=>showSaveIndicator(''), 4000);
   }
@@ -3438,10 +3443,24 @@ function saveEng(eng) {
 /* ── Users now live only in admin.js — never in the public cache/db.
    loadUsersRemote() is async and only ever called by the admin
    dashboard, which is only reachable by a signed-in admin. ── */
+function handleSessionExpiry(){
+  if (!curUser) return; // already signed out, nothing to do
+  curUser = null;
+  AUTH_TOKEN = null;
+  sessionStorage.removeItem('nct_sess');
+  sessionStorage.removeItem('nct_token');
+  updateNav();
+  toast('Your session expired — please sign in again');
+  openAuth('login');
+}
+
 async function loadUsersRemote() {
   try {
     const r = await fetch(ADMIN_ENDPOINT, { headers: { ...authHeaders() } });
-    if (!r.ok) throw new Error(`Users read ${r.status}`);
+    if (!r.ok) {
+      if (r.status === 401) { handleSessionExpiry(); return []; }
+      throw new Error(`Users read ${r.status}`);
+    }
     const d = await r.json();
     return d.users || [];
   } catch(e) {
@@ -3457,7 +3476,10 @@ async function adminUserAction(action, email, extra) {
       body: JSON.stringify({ action, email, ...extra }),
     });
     const d = await r.json().catch(()=>({}));
-    if (!r.ok) throw new Error(d.error || `Request failed (${r.status})`);
+    if (!r.ok) {
+      if (r.status === 401) { handleSessionExpiry(); return null; }
+      throw new Error(d.error || `Request failed (${r.status})`);
+    }
     return d;
   } catch(e) {
     console.error(`admin ${action} failed:`, e.message);
@@ -3839,6 +3861,7 @@ async function saveHomepageSettings(){
     setTimeout(()=>{ if(status.textContent==='Saved ✓') status.textContent=''; }, 2500);
   } catch(e) {
     console.error('Homepage save failed:', e);
+    if (e.status === 401) { status.textContent=''; handleSessionExpiry(); return; }
     status.textContent = '⚠ ' + (e.message || 'Save failed');
   }
 }
